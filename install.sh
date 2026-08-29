@@ -113,7 +113,7 @@ if [[ "${ARCHINSTALL_ENCRYPT:-0}" != "1" ]]; then
 fi
 
 run "Running archinstall (this can take a while)" \
-    archinstall --config "$ARCH_CFG" --creds "$CREDS"
+    archinstall --config "$ARCH_CFG" --creds "$CREDS" --silent
 
 # ---- Phase 3: post-install ---------------------------------------------
 step "Post-install"

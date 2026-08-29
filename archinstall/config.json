@@ -3,22 +3,43 @@
   "keyboard-layout": "us",
   "bootloader": "systemd-boot",
   "hostname": "arch",
-  "filesystem": {
-    "device": "/dev/PLACEHOLDER",
-    "filesystem_type": "btrfs",
-    "mount_options": ["compress=zstd"],
-    "btrfs": {
-      "subvolumes": {
-        "@": "/",
-        "@home": "/home",
-        "@root": "/root",
-        "@var_log": "/var/log",
-        "@var_cache": "/var/cache",
-        "@swap": "/swap",
-        "@snapshots": "/.snapshots"
+  "disk_config": {
+    "config_type": "default_layout",
+    "device_modifications": [
+      {
+        "device": "/dev/PLACEHOLDER",
+        "wipe": true,
+        "partitions": [
+          {
+            "type": "primary",
+            "start": "1MiB",
+            "size": "512MiB",
+            "fs_type": "fat32",
+            "mountpoint": "/boot",
+            "flags": ["boot", "esp"]
+          },
+          {
+            "type": "primary",
+            "start": "513MiB",
+            "size": "100%",
+            "fs_type": "btrfs",
+            "mountpoint": "/",
+            "btrfs": {
+              "subvolumes": [
+                {"name": "@", "mountpoint": "/"},
+                {"name": "@home", "mountpoint": "/home"},
+                {"name": "@root", "mountpoint": "/root"},
+                {"name": "@var_log", "mountpoint": "/var/log"},
+                {"name": "@var_cache", "mountpoint": "/var/cache"},
+                {"name": "@snapshots", "mountpoint": "/.snapshots"}
+              ]
+            },
+            "mount_options": ["compress=zstd"]
+          }
+        ]
       }
-    }
-  },
+    ]
+  }
   "swap": true,
   "network": {
     "type": "iwd"
