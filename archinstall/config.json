@@ -39,7 +39,7 @@
         ]
       }
     ]
-  }
+  },
   "swap": true,
   "network": {
     "type": "iwd"
