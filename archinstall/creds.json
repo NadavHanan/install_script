@@ -1,0 +1,6 @@
+{
+  "users": [
+    { "name": "__USER__", "password": "__PASSWORD__", "sudo": true }
+  ],
+  "root_password": "__PASSWORD__"
+}

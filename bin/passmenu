@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# tofi passmenu: pick a pass entry, copy it to the clipboard.
+# Enter copies the password. Pass "user" to copy the login line instead.
+set -euo pipefail
+
+STORE="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
+[[ -d "$STORE" ]] || exit 0
+
+mapfile -t entries < <(find "$STORE" -name '*.gpg' \
+    | sed "s|^$STORE/||; s|\.gpg$||")
+
+((${#entries[@]})) || exit 0
+
+picked=$(printf '%s\n' "${entries[@]}" | tofi --prompt "pass > ")
+[[ -z "$picked" ]] && exit 0
+
+if [[ "${1:-}" == "user" ]]; then
+    pass show "$picked" | awk '/^login:/ {print $2; exit}' | wl-copy
+else
+    pass show -c "$picked" >/dev/null
+fi

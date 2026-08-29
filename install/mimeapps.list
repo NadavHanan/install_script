@@ -1,0 +1,7 @@
+[Default]
+text/plain=nvim.desktop
+text/html=zen-browser.desktop
+image/png=imv.desktop
+image/jpeg=imv.desktop
+application/pdf=zathura.desktop
+inode/directory=nautilus.desktop

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# menus — system action picker (tofi). Run from Hyprland.
+# Adds: passmenu, music, links, power-profile.
+set -euo pipefail
+
+pick=$(printf '%s\n' \
+    "passmenu" \
+    "music" \
+    "links" \
+    "power-profile" \
+    | tofi --prompt "system > ")
+
+case "$pick" in
+    passmenu)       exec passmenu ;;
+    music)          exec music ;;
+    links)          exec links ;;
+    power-profile)  exec power-profile ;;
+    "")             exit 0 ;;
+esac

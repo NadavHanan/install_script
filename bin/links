@@ -1,0 +1,5 @@
+file="$HOME/Documents/md_files/links"
+selected=$(cut -d: -f1 "$file" | tofi --prompt-text "choose: " )
+if [[ -n "$selected" ]]; then
+  zen-browser $(grep "^${selected}:" "$file" | cut -d: -f2-)
+fi

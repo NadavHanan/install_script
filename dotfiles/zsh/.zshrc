@@ -1,0 +1,70 @@
+HISTFILE=~/.zsh/.history
+HISTSIZE=1000
+SAVEHIST=1000
+autoload -Uz compinit
+compinit
+
+export EDITOR='nvim'
+export VISUAL='nvim'
+export MANPAGER='nvim +Man!'
+export QT_STYLE_OVERRIDE=Fusion
+
+# vi mode
+bindkey -v
+# Change cursor shape for different vi modes.
+function zle-keymap-select {
+  if [[ ${KEYMAP} == vicmd ]] ||
+     [[ $1 = 'block' ]]; then
+    echo -ne '\e[1 q'
+
+  elif [[ ${KEYMAP} == main ]] ||
+       [[ ${KEYMAP} == viins ]] ||
+       [[ ${KEYMAP} = '' ]] ||
+       [[ $1 = 'beam' ]]; then
+    echo -ne '\e[5 q'
+  fi
+}
+zle -N zle-keymap-select
+# Use beam shape cursor on startup.
+echo -ne '\e[5 q'
+# Use beam shape cursor for each new prompt.
+preexec() {
+   echo -ne '\e[5 q'
+}
+
+# aliases
+alias ls='eza'
+alias ll='eza -lh --icons --total-size'
+alias v='nvim'
+alias o='xdg-open'
+alias p='sudo pacman'
+
+t () {
+  if tmux has-session 2>/dev/null; then
+    tmux attach
+  else
+    tmux new -d -s main 'nvim'
+    tmux new-window -t main:2
+    tmux attach-session -t main
+  fi
+}
+
+# cmp opts
+zstyle ':completion:*' menu select # tab opens cmp menu
+# zstyle ':completion:*' special-dirs true # force . and .. to show in cmp menu
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} ma=0\;33 # colorize cmp menu
+zstyle ':completion:*' squeeze-slashes false # explicit disable to allow /*/ expansion
+setopt correct
+PROMPT="%F{blue} %~ %f" 
+
+# Set up fzf key bindings and fuzzy completion
+source <(fzf --zsh)
+
+# syntax highlighting
+# requires zsh-syntax-highlighting package
+source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+autoload -Uz compinit && compinit
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+
+export PATH="$PATH:$HOME/.bin"

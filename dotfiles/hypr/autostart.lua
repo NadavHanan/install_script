@@ -1,0 +1,7 @@
+hl.on("hyprland.start", function()
+  hl.exec_cmd("uwsm-app -- hypridle")
+  hl.exec_cmd("uwsm-app -- swaybg -i ~/.config/hypr/wallpaper.png -m fill")
+  hl.exec_cmd("uwsm-app -- mako")
+  hl.exec_cmd("pkill waybar; uwsm-app -- waybar")
+  hl.exec_cmd(Browser)
+end)

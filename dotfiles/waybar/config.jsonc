@@ -1,0 +1,95 @@
+{
+  "reload_style_on_change": true,
+  "layer": "top",
+  "position": "top",
+  "spacing": 0,
+  "height": 26,
+  "modules-left": ["hyprland/workspaces"],
+  "modules-center": ["clock", "custom/weather"],
+  "modules-right": [
+    "hyprland/language",
+    "bluetooth",
+    "network",
+    "pulseaudio",
+    "battery"
+  ],
+  "hyprland/language": {
+    "format": "{short}"
+  },
+  "hyprland/workspaces": {
+    "on-click": "activate",
+    "format": "{icon}",
+    "format-icons": {
+      "default": "",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "active": "󱓻"
+    },
+    "persistent-workspaces": {
+      "1": [],
+      "2": [],
+      "3": [],
+      "4": [],
+      "5": []
+    }
+  },
+  "clock": {
+    "format": "{:L%H:%M}",
+    "format-alt": "{:L%d %B %Y}",
+    "tooltip": false
+  },
+  "network": {
+    "format-icons": ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"],
+    "format": "{icon}",
+    "format-wifi": "{icon}",
+    "format-ethernet": "󰀂",
+    "format-disconnected": "󰖪",
+    "tooltip-format-wifi": "{essid} ({frequency} GHz)",
+    "tooltip-format-ethernet": "Connected",
+    "tooltip-format-disconnected": "Disconnected",
+    "interval": 3,
+    "spacing": 1,
+    "on-click": "kitty --class=Impala impala"
+  },
+  "battery": {
+    "format": "{capacity}% {icon}",
+    "format-icons": {
+      "charging": ["󰢜", "󰂆", "󰂇", "󰂈", "󰢝", "󰂉", "󰢞", "󰂊", "󰂋", "󰂅"],
+      "default": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
+    },
+    "format-full": "󰂅",
+    "tooltip-format-discharging": "{time} ↓ {capacity}%",
+    "tooltip-format-charging": "{time} ↑ {capacity}%",
+    "format-time": "{H}h {M}m",
+    "interval": 5,
+    "states": {
+      "warning": 20,
+      "critical": 10
+    }
+  },
+  "bluetooth": {
+    "format": "",
+    "format-disabled": "󰂲",
+    "format-connected": "",
+    "tooltip-format": "Devices connected: {num_connections}",
+    "on-click": "bluetui"
+  },
+  "pulseaudio": {
+    "format": "{icon}",
+    "on-click": "kitty --class=Wiremix wiremix",
+    "on-click-right": "pamixer -t",
+    "tooltip-format": "Playing at {volume}%",
+    "scroll-step": 5,
+    "format-muted": "󰝟",
+    "format-icons": {
+      "default": ["", "", ""]
+    }
+  }
+}

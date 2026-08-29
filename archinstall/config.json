@@ -1,0 +1,29 @@
+{
+  "archinstall-language": "English",
+  "keyboard-layout": "us",
+  "bootloader": "systemd-boot",
+  "hostname": "arch",
+  "filesystem": {
+    "device": "/dev/PLACEHOLDER",
+    "filesystem_type": "btrfs",
+    "mount_options": ["compress=zstd"],
+    "btrfs": {
+      "subvolumes": {
+        "@": "/",
+        "@home": "/home",
+        "@root": "/root",
+        "@var_log": "/var/log",
+        "@var_cache": "/var/cache",
+        "@swap": "/swap",
+        "@snapshots": "/.snapshots"
+      }
+    }
+  },
+  "swap": true,
+  "network": {
+    "type": "iwd"
+  },
+  "services": ["iwd"],
+  "audio": "pipewire",
+  "kernels": ["linux"]
+}

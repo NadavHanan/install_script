@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# power-profile — tofi picker over power-profiles-daemon profiles.
+# Current profile is checked. Requires powerprofilesctl.
+set -euo pipefail
+
+command -v powerprofilesctl >/dev/null || { echo "power-profiles-daemon not installed" >&2; exit 1; }
+
+current=$(powerprofilesctl get 2>/dev/null || echo "unknown")
+profiles=(performance balanced power-saver)
+
+# Mark the active one.
+opts=()
+for p in "${profiles[@]}"; do
+    if [[ "$p" == "$current" ]]; then
+        opts+=("● $p")
+    else
+        opts+=("  $p")
+    fi
+done
+
+pick=$(printf '%s\n' "${opts[@]}" | tofi --prompt "power > ")
+[[ -z "$pick" ]] && exit 0
+
+# Strip the leading marker.
+target=$(printf '%s' "$pick" | awk '{print $2}')
+
+powerprofilesctl set "$target"
+notify-send "Power profile" "set to $target" || true
