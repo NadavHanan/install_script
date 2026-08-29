@@ -91,7 +91,12 @@ CREDS="$TMP_DIR/creds.json"
 jq \
    --arg user "$USERNAME" \
    --arg pw "$USER_PASSWORD" \
-   'gsub("__USER__"; $user) | gsub("__PASSWORD__"; $pw)' \
+   'walk(
+      if type == "string"
+      then gsub("__USER__"; $user) | gsub("__PASSWORD__"; $pw)
+      else .
+      end
+    )' \
    "$REPO_ROOT/archinstall/creds.json" > "$CREDS"
 
 ARCH_CFG="$TMP_DIR/archinstall_config.json"
