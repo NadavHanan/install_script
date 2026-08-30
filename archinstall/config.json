@@ -149,9 +149,7 @@
     },
     "ntp": true,
     "packages": [
-        "hyprland",
-        "neovim",
-        "kitty"
+        "gum"
     ],
     "pacman_config": {
         "color": true,
