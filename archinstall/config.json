@@ -1,50 +1,177 @@
 {
-  "archinstall-language": "English",
-  "keyboard-layout": "us",
-  "bootloader": "systemd-boot",
-  "hostname": "arch",
-  "disk_config": {
-    "config_type": "default_layout",
-    "device_modifications": [
-      {
-        "device": "/dev/PLACEHOLDER",
-        "wipe": true,
-        "partitions": [
-          {
-            "type": "primary",
-            "start": "1MiB",
-            "size": "512MiB",
-            "fs_type": "fat32",
-            "mountpoint": "/boot",
-            "flags": ["boot", "esp"]
-          },
-          {
-            "type": "primary",
-            "start": "513MiB",
-            "size": "100%",
-            "fs_type": "btrfs",
-            "mountpoint": "/",
-            "btrfs": {
-              "subvolumes": [
-                {"name": "@", "mountpoint": "/"},
-                {"name": "@home", "mountpoint": "/home"},
-                {"name": "@root", "mountpoint": "/root"},
-                {"name": "@var_log", "mountpoint": "/var/log"},
-                {"name": "@var_cache", "mountpoint": "/var/cache"},
-                {"name": "@snapshots", "mountpoint": "/.snapshots"}
-              ]
-            },
-            "mount_options": ["compress=zstd"]
-          }
+    "app_config": {
+        "audio_config": {
+            "audio": "pipewire"
+        },
+        "bluetooth_config": {
+            "enabled": true
+        },
+        "fonts_config": {
+            "fonts": [
+                "noto-fonts",
+                "noto-fonts-emoji"
+            ]
+        },
+        "print_service_config": {
+            "enabled": true
+        }
+    },
+    "archinstall_language": "English",
+    "auth_config": {},
+    "bootloader_config": {
+        "bootloader": "Systemd-boot",
+        "removable": false,
+        "uki": true
+    },
+    "custom_commands": [],
+    "disk_config": {
+        "btrfs_options": {
+            "snapshot_config": null
+        },
+        "config_type": "default_layout",
+        "device_modifications": [
+            {
+                "device": "/dev/vda",
+                "partitions": [
+                    {
+                        "btrfs": [],
+                        "dev_path": null,
+                        "flags": [
+                            "boot",
+                            "esp"
+                        ],
+                        "fs_type": "fat32",
+                        "mount_options": [],
+                        "mountpoint": "/boot",
+                        "obj_id": "83ab5eec-81aa-40ae-95d5-a7f9bb8ea36d",
+                        "size": {
+                            "sector_size": {
+                                "unit": "B",
+                                "value": 512
+                            },
+                            "unit": "GiB",
+                            "value": 1
+                        },
+                        "start": {
+                            "sector_size": {
+                                "unit": "B",
+                                "value": 512
+                            },
+                            "unit": "MiB",
+                            "value": 1
+                        },
+                        "status": "create",
+                        "type": "primary"
+                    },
+                    {
+                        "btrfs": [
+                            {
+                                "mountpoint": "/",
+                                "name": "@"
+                            },
+                            {
+                                "mountpoint": "/home",
+                                "name": "@home"
+                            },
+                            {
+                                "mountpoint": "/var/log",
+                                "name": "@log"
+                            },
+                            {
+                                "mountpoint": "/var/cache/pacman/pkg",
+                                "name": "@pkg"
+                            }
+                        ],
+                        "dev_path": null,
+                        "flags": [],
+                        "fs_type": "btrfs",
+                        "mount_options": [
+                            "compress=zstd"
+                        ],
+                        "mountpoint": null,
+                        "obj_id": "670f10e9-70ef-403d-b253-cf228d8740d0",
+                        "size": {
+                            "sector_size": {
+                                "unit": "B",
+                                "value": 512
+                            },
+                            "unit": "B",
+                            "value": 31136415744
+                        },
+                        "start": {
+                            "sector_size": {
+                                "unit": "B",
+                                "value": 512
+                            },
+                            "unit": "B",
+                            "value": 1074790400
+                        },
+                        "status": "create",
+                        "type": "primary"
+                    }
+                ],
+                "wipe": true
+            }
         ]
-      }
-    ]
-  },
-  "swap": true,
-  "network": {
-    "type": "iwd"
-  },
-  "services": ["iwd"],
-  "audio": "pipewire",
-  "kernels": ["linux"]
+    },
+    "hostname": "arch",
+    "kernels": [
+        "linux"
+    ],
+    "locale_config": {
+        "console_font": "default8x16",
+        "kb_layout": "us",
+        "sys_enc": "UTF-8",
+        "sys_lang": "en_US.UTF-8"
+    },
+    "mirror_config": {
+        "custom_repositories": [],
+        "custom_servers": [],
+        "mirror_regions": {
+            "Israel": [
+                "http://mirror.isoc.org.il/pub/archlinux/$repo/os/$arch",
+                "https://mirror.isoc.org.il/pub/archlinux/$repo/os/$arch",
+                "http://archlinux.interhost.co.il/$repo/os/$arch",
+                "https://archlinux.interhost.co.il/$repo/os/$arch"
+            ],
+            "Worldwide": [
+                "http://mirror.rackspace.com/archlinux/$repo/os/$arch",
+                "https://mirror.rackspace.com/archlinux/$repo/os/$arch",
+                "https://ftpmirror.infania.net/mirror/archlinux/$repo/os/$arch",
+                "https://geo.mirror.pkgbuild.com/$repo/os/$arch",
+                "https://fastly.mirror.pkgbuild.com/$repo/os/$arch"
+            ]
+        },
+        "optional_repositories": []
+    },
+    "network_config": {
+        "type": "iwd"
+    },
+    "ntp": true,
+    "packages": [
+        "hyprland",
+        "neovim",
+        "kitty"
+    ],
+    "pacman_config": {
+        "color": true,
+        "parallel_downloads": 5
+    },
+    "profile_config": {
+        "gfx_driver": null,
+        "greeter": null,
+        "profile": {
+            "custom_settings": {},
+            "details": [],
+            "main": "Minimal"
+        }
+    },
+    "script": null,
+    "services": [],
+    "swap": {
+        "algorithm": "zstd",
+        "enabled": true
+    },
+    "timezone": "Israel",
+    "version": "4.4"
 }

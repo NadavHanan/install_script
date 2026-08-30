@@ -119,17 +119,23 @@ run "Running archinstall (this can take a while)" \
 step "Post-install"
 
 if ! mountpoint -q /mnt; then
-    SUB=$(lsblk -no MOUNTPOINT "$DISK" 2>/dev/null | grep -E '^/mnt' | head -n1)
-    if [[ -n "$SUB" && "$SUB" != "/mnt" ]]; then
-        mount --bind /mnt "$SUB" 2>/dev/null || true
+    SUB=$(lsblk -no MOUNTPOINT "$DISK" 2>/dev/null \
+        | grep -E '^/mnt' \
+        | awk '{ print length, $0 }' | sort -n | cut -d' ' -f2- \
+        | head -n1)
+    if [[ -z "$SUB" ]]; then
+        step_fail "could not find archinstall mountpoint under /mnt for $DISK" >&2
+        exit 1
     fi
-    mount "$DISK" /mnt 2>/dev/null || true
+    if [[ "$SUB" != "/mnt" ]]; then
+        mount --bind "$SUB" /mnt
+    fi
 fi
+mountpoint -q /mnt || { echo "/mnt is not a valid mountpoint; aborting" >&2; exit 1; }
 
 run "Running post-install scripts" \
     arch-chroot /mnt /bin/bash "$REPO_ROOT/install/all.sh" \
         "$USERNAME" "$USER_PASSWORD" "$GIT_NAME" "$GIT_EMAIL"
-
 echo
 gum style --bold --foreground 10 --align center 'Installation complete!'
 echo
