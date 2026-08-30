@@ -133,9 +133,15 @@ if ! mountpoint -q /mnt; then
 fi
 mountpoint -q /mnt || { echo "/mnt is not a valid mountpoint; aborting" >&2; exit 1; }
 
+mkdir -p /mnt/root/install_script
+mount --bind "$REPO_ROOT" /mnt/root/install_script
+
 run "Running post-install scripts" \
-    arch-chroot /mnt /bin/bash "$REPO_ROOT/install/all.sh" \
+    arch-chroot /mnt /bin/bash /root/install_script/install/all.sh \
         "$USERNAME" "$USER_PASSWORD" "$GIT_NAME" "$GIT_EMAIL"
+
+umount /mnt/root/install_script
+
 echo
 gum style --bold --foreground 10 --align center 'Installation complete!'
 echo
