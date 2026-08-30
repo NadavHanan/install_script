@@ -10,7 +10,7 @@ step "Installing packages"
 
 PKGS=(
     # base
-    base-devel linux-headers git gnupg openssh
+    base-devel linux-headers openssh
 
     # docs
     man-db man-pages
@@ -18,25 +18,16 @@ PKGS=(
     # login / compositor
     greetd greetd-tuigreet hyprland hypridle hyprlock
     xdg-desktop-portal xdg-desktop-portal-hyprland qt5-wayland qt6-wayland
-    polkit polkit-gnome
+    polkit-gnome
 
     # status / tray
     waybar mako wob swaybg bluetui wiremix brightnessctl impala
     power-profiles-daemon udiskie
 
-    # bluetooth
-    bluez bluez-utils
-
     # menu / files / viewers
-    tofi nautilus file-roller
+    nautilus file-roller
     zathura imv mpv
     grim slurp wl-clipboard cliphist
-
-    # audio
-    pipewire pipewire-pulse wireplumber
-
-    # printing
-    cups
 
     # mirror ranking
     reflector
@@ -47,21 +38,14 @@ PKGS=(
     # terminal / shell
     kitty zsh zsh-syntax-highlighting zsh-completions fzf tealdeer
 
-    # browser / github
-    gh
-
     # fonts
-    ttf-cascadia-code-nerd ttf-font-awesome noto-fonts-emoji
+    ttf-cascadia-code-nerd ttf-font-awesome
 
     # passwords
     pass pass-otp fprintd
 
     # nice-to-haves
     tmux btop fastfetch eza ripgrep fd bat typst uv
-    localsend
-
-    # printer app
-    system-config-printer
 
     # firmware
     fwupd
@@ -90,6 +74,7 @@ fi
 # AUR packages
 AUR_PKGS=(
     zen-browser-bin
+    tofi-bin
 )
 if command -v yay >/dev/null; then
     sudo -u "$USERNAME" yay -S --needed --noconfirm "${AUR_PKGS[@]}" || true

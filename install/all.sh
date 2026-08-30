@@ -13,8 +13,8 @@ GIT_EMAIL="$4"
 
 # system.sh runs first: services, groups, passwordless sudo (needed for yay),
 # and the fprintd PAM wiring.
-bash "$REPO_ROOT/install/system.sh"  "$USERNAME"
 bash "$REPO_ROOT/install/packages.sh"
+bash "$REPO_ROOT/install/system.sh"  "$USERNAME"
 bash "$REPO_ROOT/install/reflector.sh"
 bash "$REPO_ROOT/install/user.sh"    "$USERNAME" "$GIT_NAME" "$GIT_EMAIL"
 bash "$REPO_ROOT/install/dotfiles.sh"
