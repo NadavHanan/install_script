@@ -108,7 +108,7 @@ jq \
 # disk_config.disk_encryption, and the encryption password is a top-level
 # creds key (encryption_password) that archinstall merges in.
 # Resize the btrfs root partition to fill the chosen disk, not the fixed 29GiB.
-DISK_SIZE=$(lsblk -bno SIZE "$DISK") || { step_fail "could not stat $DISK"; exit 1; }
+DISK_SIZE=$(lsblk -bdno SIZE "$DISK") || { step_fail "could not stat $DISK"; exit 1; }
 ROOT_START=1074790400    # boot: 1 MiB offset + 1 GiB ESP
 GPT_RESERVE=1048576      # 1 MiB backup GPT header
 ROOT_SIZE=$((DISK_SIZE - ROOT_START - GPT_RESERVE))
