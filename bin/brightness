@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# brightness — display backlight control with a wob OSD.
+# Args: up | down   (default: up)
+set -euo pipefail
+
+case "${1:-up}" in
+    up)   brightnessctl -e4 -n2 set 5%+ ;;
+    down) brightnessctl -e4 -n2 set 5%- ;;
+    *)    echo "usage: brightness up|down" >&2; exit 2 ;;
+esac
+
+# Show current brightness (0-100) on the wob bar.
+pct=$(awk -v v="$(brightnessctl get)" -v m="$(brightnessctl max)" 'BEGIN{printf "%d\n", v/m*100}')
+[[ "$pct" -gt 100 ]] && pct=100
+
+PIPE="${WOB_PIPE:-/tmp/wobpipe}"
+if [[ -p "$PIPE" ]]; then
+    exec {fd}<>"$PIPE"
+    echo "$pct" >&"$fd"
+    exec {fd}>&-
+fi

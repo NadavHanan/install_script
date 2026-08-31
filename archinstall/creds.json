@@ -1,6 +1,7 @@
 {
   "users": [
-    { "name": "__USER__", "password": "__PASSWORD__", "sudo": true }
+    { "username": "__USER__", "!password": "__PASSWORD__", "sudo": true, "groups": [] }
   ],
-  "root_password": "__PASSWORD__"
+  "!root-password": "__PASSWORD__",
+  "encryption_password": "__PASSWORD__"
 }

@@ -1,5 +1,11 @@
-file="$HOME/Documents/md_files/links"
-selected=$(cut -d: -f1 "$file" | tofi --prompt-text "choose: " )
-if [[ -n "$selected" ]]; then
-  zen-browser $(grep "^${selected}:" "$file" | cut -d: -f2-)
-fi
+#!/usr/bin/env bash
+# links — open a URL from ~/Documents/md_files/links (lines: label:url)
+set -euo pipefail
+
+FILE="${LINKS_FILE:-$HOME/Documents/md_files/links}"
+[[ -f "$FILE" ]] || { notify-send "links" "missing $FILE" >/dev/null 2>&1; exit 1; }
+
+picked=$(cut -d: -f1 "$FILE" | tofi --prompt-text "choose: ")
+[[ -n "$picked" ]] || exit 0
+
+zen-browser "$(grep "^${picked}:" "$FILE" | cut -d: -f2-)"

@@ -1,17 +1,10 @@
 #!/usr/bin/env bash
-# Step UI + log routing, backed by gum. Source from any script that wants clean output.
-#
+# ui.sh - shared gum UI + log routing. Source from install scripts.
+set -u
+
 # Public:
-#   UI_VERBOSE=1     - stream command output to terminal (still tee'd to log)
-#   UI_LOG           - log file path
-#   step  <name>     - announce a step header
-#   step_ok          - mark current step ok
-#   step_fail        - mark current step failed
-#   run   <name> <cmd...> - run a command with a spinner, route output
-#   confirm <prompt> - yes/no confirmation
-#   prompt/prompt_secret - text/secret input via gum
-#   box    <text...> - gum-styled rounded box
-#   heading <text>   - small styled heading
+#   UI_VERBOSE=1 - stream command output (still tee'd to log)
+#   UI_LOG       - log file path (default /tmp/...)
 
 UI_LOG="${UI_LOG:-/tmp/arch-install-$(date +%Y%m%d-%H%M%S).log}"
 mkdir -p "$(dirname "$UI_LOG")"
@@ -19,7 +12,6 @@ mkdir -p "$(dirname "$UI_LOG")"
 
 command -v gum >/dev/null 2>&1 || {
     echo "gum not found in PATH; install gum first." >&2
-    echo "  pacman -Syu --noconfirm gum  (Arch)" >&2
     exit 1
 }
 
@@ -91,13 +83,15 @@ prompt() {
 
 prompt_secret() {
     local var="$1" label="$2"
-    local value
+    local value check
     while true; do
         value=$(gum input --password --prompt "$label > ")
-        if [[ -n "$value" ]]; then
+        [[ -n "$value" ]] || { gum style --foreground 1 "value cannot be empty"; continue; }
+        check=$(gum input --password --prompt "confirm $label > ")
+        if [[ "$value" == "$check" ]]; then
             printf -v "$var" '%s' "$value"
             return
         fi
-        gum style --foreground 1 "value cannot be empty"
+        gum style --foreground 1 "passwords did not match"
     done
 }

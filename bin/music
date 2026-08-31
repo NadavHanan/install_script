@@ -1,1 +1,11 @@
-ls "/home/nadav/Music" | tofi --prompt-text "choose: " | uconv -x any-nfc | xargs -I{} mpv "/home/nadav/Music/{}"
+#!/usr/bin/env bash
+# music — play a file from ~/Music via tofi + mpv
+set -euo pipefail
+
+DIR="${MUSIC_DIR:-$HOME/Music}"
+[[ -d "$DIR" ]] || { notify-send "music" "missing $DIR" >/dev/null 2>&1; exit 1; }
+
+picked=$(ls "$DIR" | sort | tofi --prompt-text "choose: ")
+[[ -n "$picked" ]] || exit 0
+
+mpv "$DIR/$picked"

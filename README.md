@@ -6,14 +6,15 @@ via small post-install scripts. Single-orchestrator UX, runs from the ISO.
 ## Usage
 
 ```bash
-# from the ISO, even if you're offline:
-curl -sL https://raw.githubusercontent.com/you/my-arch/main/install.sh | bash
+# from the ISO
+curl -sL https://github.com/NadavHanan/install_script/install.sh | bash
 
 # or from a cloned repo:
 ./install.sh                       # clean output, logs to /tmp/arch-install-*.log
 ./install.sh --verbose             # also stream command output to terminal
 ./install.sh --disk /dev/nvme0n1   # override autodetected disk
 ARCHINSTALL_ENCRYPT=1 ./install.sh # opt into LUKS disk encryption
+INSTALL_BTRBK=1      ./install.sh # also set up btrbk snapshots (local; remote opt-in)
 ```
 
 ## What it does
@@ -22,12 +23,19 @@ ARCHINSTALL_ENCRYPT=1 ./install.sh # opt into LUKS disk encryption
 2. Gum UI: username, password, git identity, disk.
 3. Runs `archinstall` with `archinstall/config.json` (no LUKS by default; iwd only).
 4. Runs `install/all.sh` inside the new system via `arch-chroot`:
-   packages, reflector mirror ranking, services, dotfiles, bin scripts,
+   services, mirror ranking, packages, user config, dotfiles, bin scripts,
    post-install README.
 
 The install disk is auto-detected as the single non-removable, non-loopback
 block device. If multiple candidates exist, the installer aborts — pass
-`--disk` to choose manually.
+`--disk` to choose manually (this rewrites `disk_config` in the archinstall
+config to match the chosen disk).
+
+## Philosophy
+
+1. fast and minimal
+2. apps do one thing and do it well
+3. terminal and text files focused system
 
 ## Layout
 
@@ -50,6 +58,8 @@ block device. If multiple candidates exist, the installer aborts — pass
   - `mimeapps.list` — copied to `~/.config/mimeapps.list`
   - `zshenv`        — copied to `/etc/zsh/zshenv` (sets `ZDOTDIR`)
   - `POST_INSTALL.md` — copied to `~/POST_INSTALL.md`
+  - `btrbk.sh`      — optional btrbk snapshots (via `INSTALL_BTRBK=1`); local-only by default
+    - `btrbk.conf`, `backup.env`, `backup-run.sh`, `btrbk-backup.{service,timer}`
 - `bin/` — repo commands; copied into `~/.local/bin/` on setup. `passmenu` lives here.
 - `dotfiles/` — per-tool config; copied into `~/.config/<dir>` on setup.
   `dotfiles/zsh/.zshrc` is sourced because `ZDOTDIR` is set in `/etc/zsh/zshenv`.

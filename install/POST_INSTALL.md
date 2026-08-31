@@ -61,6 +61,55 @@ NetworkManager. Here's the lay of the land.
 - Mirrors: re-rank with `sudo reflector --age 12 --latest 20 --sort rate \
   --save /etc/pacman.d/mirrorlist`.
 
+## Backups (btrbk)
+
+Installed only when `INSTALL_BTRBK=1` at install time. A timer
+(`btrbk-backup.timer`) takes a local btrfs snapshot every hour and prunes to
+retention.
+
+- Retention: **local** 3 daily + 1 weekly + 1 monthly; snapshots live under
+  `/mnt/btr_pool/btrbk_snapshots` (thin reflinks — cheap).
+- Snapshots of `@` (= `/`) and `@home` are made. `@log` and `@pkg` are
+  skipped — journal/pacman-cache snapshots waste space.
+- Local snapshots are `systemd`-driven and keep running even with no remote
+  target; they protect against accidental edits/deletes, **not** disk
+  failure or theft.
+
+Inspect: `btrbk list`, `btrbk status`. The log is `/var/log/btrbk.log`, and
+no `Persistent=true` is set, so a laptop left closed won't replay a backlog.
+
+### Remote target (opt-in)
+
+Backups run only when the target is reachable (home LAN or a plugged-in
+USB disk). The hourly run simply skips an unreachable target.
+
+1. Pick a transport (SSH server **or** USB disk) and uncomment that block
+   under `volume /mnt/btr_pool` in `/etc/btrbk/btrbk.conf`. The target must
+   be a **btrfs** filesystem. Remote retention keeps **more** (3 monthly).
+   - SSH: set `ssh_uri` + `target` (install `btrbk` on the server).
+   - USB: set `target /mnt/backup/btrbk` (mount an btrfs-formatted disk
+     there; `udiskie` won't auto-mount a btrfs partition — add an fstab
+     entry or use `mount`).
+2. In `/etc/btrbk/backup.env`, set:
+   - `BACKUP_SSH_HOST=user@host` (for SSH) **or** `BACKUP_USB_DIR=/mnt/backup`
+   - `MISC_DEST=` — rsync destination for the small config files. Format:
+     SSH `user@host:/path`, USB `/mnt/backup/misc`.
+3. For SSH only, install the root SSH key on the server so backups run
+   non-interactively:
+   ```sh
+   sudo ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519
+   sudo ssh-copy-id admin@<server>
+   ```
+   The server's btrbk target user must also be able to run `btrfs`.
+
+On each hourly run, once reachable, btrbk sends incrementally to the target
+and rsyncs `/var/lib/iwd`, `/var/lib/bluetooth`, and
+`explicit-packages.txt` (from `pacman -Qqe`) to `MISC_DEST`.
+
+Storage note: local snapshots add a few GB; the remote grows with retained
+history — roughly 1.2–2.5x your root+home usage, dominated by the 3-monthly
+retention. Drop `target_preserve` (e.g. to `1m`) to shrink it.
+
 ## Fingerprint
 
 - fprintd is only enabled and wired into PAM if a supported sensor is

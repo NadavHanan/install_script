@@ -34,17 +34,6 @@ for grp in video input lp audio bluetooth; do
     usermod -aG "$grp" "$USERNAME"
 done
 
-# ---- NOPASSWD sudo for unattended AUR builds ----------------------------
-# Without this, sudo -u "$USERNAME" yay prompts mid-install.
-step "Configuring passwordless sudo for $USERNAME"
-sudoers_file="/etc/sudoers.d/90-$USERNAME-nopasswd"
-{
-    printf '# Unattended AUR / pacman builds.\n'
-    printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$USERNAME"
-} > "$sudoers_file"
-chmod 440 "$sudoers_file"
-visudo -c -f "$sudoers_file" >/dev/null
-
 # ---- fprintd: only enable + wire PAM if a supported sensor is present ---
 # libfprint only supports a subset of readers; some match-on-chip sensors
 # (common on newer Dell/HP/Lenovo) need extra AUR drivers or are unsupported.
@@ -52,8 +41,10 @@ visudo -c -f "$sudoers_file" >/dev/null
 # PAM untouched.
 
 has_fingerprint_sensor() {
-    lsusb 2>/dev/null | grep -iE 'finger|goodix|synaptics.*(fingerprint|finger)|elan.*(fingerprint|finger)|validity|authentec' \
-        >/dev/null
+    # headless probe via /sys — no usbutils dependency.
+    shopt -s nullglob
+    grep -hiE 'finger|goodix|synaptics.*(fingerprint|finger)|elan.*(fingerprint|finger)|validity|authentec' \
+        /sys/bus/usb/devices/*/product 2>/dev/null | grep -q .
 }
 
 if has_fingerprint_sensor; then

@@ -1,0 +1,10 @@
+[Unit]
+Description=Hourly btrbk backup (local snapshots; remote only when on LAN/USB)
+
+[Timer]
+# Every hour, while the laptop is on. No Persistent=true -> no backlog replay
+# after being closed all day (per user preference).
+OnCalendar=*-*-* *:00:15
+
+[Install]
+WantedBy=timers.target

@@ -1,3 +1,2 @@
 # Tell zsh to read its configs from ~/.config/zsh/ instead of ~/.
-# Drop a marker here so user-scope zshenv doesn't clobber it.
 export ZDOTDIR="$HOME/.config/zsh"

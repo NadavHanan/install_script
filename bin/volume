@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# volume — pipewire volume control with a wob OSD.
+# Args: up | down | mute   (default: up)
+set -euo pipefail
+
+SINK="@DEFAULT_AUDIO_SINK@"
+case "${1:-up}" in
+    up)   wpctl set-volume -l 1 "$SINK" 5%+ ;;
+    down) wpctl set-volume "$SINK" 5%- ;;
+    mute) wpctl set-mute "$SINK" toggle ;;
+    *)    echo "usage: volume up|down|mute" >&2; exit 2 ;;
+esac
+
+# Show current volume on the wob bar (no-op if wob isn't running).
+pct=$(wpctl get-volume "$SINK" | awk '{printf "%d\n", $2*100}')
+wpctl get-volume "$SINK" | grep -q MUTED && pct=0
+
+PIPE="${WOB_PIPE:-/tmp/wobpipe}"
+if [[ -p "$PIPE" ]]; then
+    exec {fd}<>"$PIPE"   # read-write open: never blocks if wob goes away
+    echo "$pct" >&"$fd"
+    exec {fd}>&-
+fi

@@ -21,8 +21,8 @@ done
 pick=$(printf '%s\n' "${opts[@]}" | tofi --prompt "power > ")
 [[ -z "$pick" ]] && exit 0
 
-# Strip the leading marker.
-target=$(printf '%s' "$pick" | awk '{print $2}')
+# Strip the leading marker (● / two spaces) instead of guessing a field.
+target="${pick#* }"
 
 powerprofilesctl set "$target"
 notify-send "Power profile" "set to $target" || true

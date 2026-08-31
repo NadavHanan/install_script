@@ -1,12 +1,26 @@
 #!/usr/bin/env bash
-# Idempotent package install. Runs in the chroot.
+# Idempotent package install. Runs in the chroot. Arg: <username>
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=ui.sh
 source "$REPO_ROOT/install/ui.sh"
 
+USERNAME="${1:?usage: packages.sh <username>}"
+
 step "Installing packages"
+
+# Temporary passwordless sudo, needed only for the unattended AUR build below
+# (yay/makepkg call sudo themselves). Removed when this script exits.
+SUDOERS_FILE="/etc/sudoers.d/90-$USERNAME-nopasswd"
+{
+    printf '# Temporary: unattended AUR / pacman builds during install.\n'
+    printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$USERNAME"
+} > "$SUDOERS_FILE"
+chmod 440 "$SUDOERS_FILE"
+visudo -c -f "$SUDOERS_FILE" >/dev/null
+cleanup() { rm -f "$SUDOERS_FILE"; }
+trap cleanup EXIT
 
 PKGS=(
     # base
@@ -54,9 +68,6 @@ PKGS=(
 pacman -Syu --needed --noconfirm "${PKGS[@]}"
 
 # ---- AUR bootstrap: yay from AUR, then AUR packages --------------------
-USERNAME=$(getent passwd | awk -F: '$3 >= 1000 && $3 < 65000 {print $1; exit}')
-[[ -z "$USERNAME" ]] && { step_fail; exit 1; }
-
 if ! command -v yay >/dev/null; then
     step "Bootstrapping yay from AUR"
     yay_user_home=$(getent passwd "$USERNAME" | cut -d: -f6)
@@ -77,7 +88,7 @@ AUR_PKGS=(
     tofi-bin
 )
 if command -v yay >/dev/null; then
-    sudo -u "$USERNAME" yay -S --needed --noconfirm "${AUR_PKGS[@]}" || true
+    sudo -u "$USERNAME" yay -S --needed --noconfirm "${AUR_PKGS[@]}"
 fi
 
 # Run xdg-user-dirs to populate ~/ standard dirs.

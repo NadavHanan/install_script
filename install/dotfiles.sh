@@ -1,18 +1,15 @@
 #!/usr/bin/env bash
 # Copy dotfiles from repo to ~/.config (not symlink — per spec).
-# Runs in the chroot as root.
+# Runs in the chroot as root. Arg: <username>
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=ui.sh
 source "$REPO_ROOT/install/ui.sh"
 
-step "Installing dotfiles"
+USERNAME="${1:?usage: dotfiles.sh <username>}"
 
-# Find the non-root user we just created (archinstall sets one).
-USERNAME=$(getent passwd | awk -F: '$3 >= 1000 && $3 < 65000 && $7 ~ /bash|zsh|sh$/ {print $1; exit}')
-[[ -z "$USERNAME" ]] && USERNAME=$(getent passwd | awk -F: '$3 >= 1000 && $3 < 65000 {print $1; exit}')
-[[ -z "$USERNAME" ]] && { step_fail; exit 1; }
+step "Installing dotfiles"
 
 HOME_DIR="/home/$USERNAME"
 DOT_DIR="$HOME_DIR/.config"

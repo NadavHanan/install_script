@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# User-level config: git identity, XDG defaults, passmenu wiring.
+# User-level config: git identity, XDG defaults.
 # Args: <username> <git_name> <git_email>
 set -euo pipefail
 
@@ -22,11 +22,6 @@ sudo -u "$USERNAME" git config --global user.email "$GIT_EMAIL"
 sudo -u "$USERNAME" git config --global init.defaultBranch master
 sudo -u "$USERNAME" git config --global pull.rebase true
 
-# passmenu via tofi
-sudo -u "$USERNAME" mkdir -p "$HOME_DIR/.local/bin"
-sudo -u "$USERNAME" cp "$REPO_ROOT/install/passmenu.sh" "$HOME_DIR/.local/bin/passmenu"
-sudo -u "$USERNAME" chmod +x "$HOME_DIR/.local/bin/passmenu"
-
+# passmenu is handled by bin.sh (copies bin/passmenu).
 chown -R "$USERNAME:$USERNAME" "$HOME_DIR/.config"
-chown -R "$USERNAME:$USERNAME" "$HOME_DIR/.local"
 step_ok
