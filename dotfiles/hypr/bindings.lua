@@ -1,7 +1,7 @@
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 local termlunch = "uwsm-app -- " .. Terminal .. " "
-local hl
+
 -- main binds
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(Terminal))
 hl.bind(mainMod .. " + X", hl.dsp.window.close())
