@@ -149,7 +149,8 @@
     },
     "ntp": true,
     "packages": [
-        "gum"
+        "gum",
+        "git"
     ],
     "pacman_config": {
         "color": true,

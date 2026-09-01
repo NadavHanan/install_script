@@ -16,7 +16,6 @@ systemctl enable iwd.service
 systemctl enable bluetooth.service
 systemctl enable cups.socket
 systemctl enable power-profiles-daemon.service
-systemctl enable udiskie.service
 systemctl enable sshd.service
 systemctl enable fstrim.timer
 
@@ -73,5 +72,21 @@ if has_fingerprint_sensor; then
 else
     gum style --faint "    no fingerprint sensor detected — fprintd left disabled"
 fi
+
+# udiskie automounts removable media and ships NO systemd unit (the service
+# file exists only as an upstream example). It runs per-user: needs the
+# graphical session. Install the unit, enable it for the user, and enable
+# linger so mounts work at boot, not just after the first login.
+step "Configuring udiskie (user service)"
+cp "$REPO_ROOT/install/udiskie.service" /etc/systemd/user/udiskie.service
+systemctl --global enable udiskie.service
+mkdir -p /var/lib/systemd/linger 2>/dev/null || true
+: > "/var/lib/systemd/linger/$USERNAME"
+
+# pacman cosmetics: colour output + the (very important) ILoveCandy scrollbar.
+step "Configuring pacman (Color, ILoveCandy)"
+sed -i 's/^#Color/Color/' /etc/pacman.conf
+grep -q '^ILoveCandy' /etc/pacman.conf || \
+    sed -i '/^Color/a ILoveCandy' /etc/pacman.conf
 
 step_ok

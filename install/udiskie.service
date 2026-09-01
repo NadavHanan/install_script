@@ -1,0 +1,10 @@
+[Unit]
+Description=udiskie automount daemon (removable media)
+
+[Service]
+ExecStart=/usr/bin/udiskie --smart-tray
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
