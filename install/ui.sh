@@ -36,6 +36,21 @@ step_ok() {
     gum style --foreground 2 "    ok"
 }
 
+# True only when gum works AND stdout is a real terminal — animations and
+# colour only render there. Under pipes/redirects/non-interactive runs we
+# fall back to plain text instead of emitting ANSI garbage.
+gum_tty() { command -v gum >/dev/null 2>&1 && [[ -t 1 ]]; }
+
+# Grey "current substage" line (e.g. "installing packages"). Plain when the
+# terminal can't render it.
+substage() {
+    if gum_tty; then
+        gum style --faint -- "... $*"
+    else
+        printf '... %s\n' "$*"
+    fi
+}
+
 step_fail() {
     gum style --foreground 1 "    fail (log: $UI_LOG)"
 }
@@ -43,23 +58,19 @@ step_fail() {
 run() {
     local name="$1"; shift
     step "$name"
-    if [[ "${UI_VERBOSE:-0}" == "1" ]]; then
-        if "$@" 2>&1 | tee -a "$UI_LOG"; then
-            step_ok
-        else
-            step_fail; return 1
-        fi
-    else
-        local tmp rc=0
-        tmp=$(mktemp)
-        gum spin --spinner dot --title "$name" -- "$@" >"$tmp" 2>&1 || rc=$?
-        cat "$tmp" >> "$UI_LOG"; rm -f "$tmp"
-        if [[ $rc -eq 0 ]]; then
-            step_ok
-        else
-            step_fail; return "$rc"
-        fi
+    # No fancy spinner when running into a non-terminal or when verbose:
+    # just run it and stream straight to the log + screen.
+    if [[ "${UI_VERBOSE:-0}" == "1" ]] || ! gum_tty; then
+        "$@" 2>&1 | tee -a "$UI_LOG"
+        local rc=${PIPESTATUS[0]}
+        (( rc == 0 )) && step_ok || { step_fail; return "$rc"; }
+        return 0
     fi
+    local tmp rc=0
+    tmp=$(mktemp)
+    gum spin --spinner dot --title "$name" -- "$@" >"$tmp" 2>&1 || rc=$?
+    cat "$tmp" >> "$UI_LOG"; rm -f "$tmp"
+    (( rc == 0 )) && step_ok || { step_fail; return "$rc"; }
 }
 
 confirm() {

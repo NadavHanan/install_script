@@ -1,0 +1,261 @@
+#!/usr/bin/env bash
+# Interactive remote-backup setup.
+#
+# Run AFTER install, whenever you want:  setup-backup
+# Walks through discover -> choose -> verify -> confirm -> apply, and configures
+# the hourly btrbk snapshot timer plus rsync of small config files to a remote
+# (over SSH) or a USB disk. No backup remote is configured at install time; use
+# this to add one later.
+#
+# Needs gum (UI), sudo (root re-exec), and btrfs on the boot/system partition.
+set -euo pipefail
+
+# --- root, gum, dependencies ---------------------------------------------
+if (( EUID != 0 )); then
+    command -v sudo >/dev/null 2>&1 || { echo "need root (or sudo)" >&2; exit 1; }
+    exec sudo "$0" "$@"
+fi
+command -v gum >/dev/null 2>&1 || { echo "setup-backup: gum is required" >&2; exit 1; }
+
+POOL="/mnt/btr_pool"
+CONF_DIR="/etc/btrbk"
+CONF="$CONF_DIR/btrbk.conf"
+ENV="$CONF_DIR/backup.env"
+RUNNER="/usr/local/sbin/backup-run.sh"
+
+info() { gum style --foreground 4 --bold "==> $*"; }
+ok()   { gum style --foreground 2 "    ok"; }
+
+# ---- Stage 1: discover candidate remotes --------------------------------
+ssh_hosts() {
+    # Named Hosts from user + root ssh config (skip wildcard patterns).
+    { for f in ~/.ssh/config /root/.ssh/config "$HOME/.ssh/config"; do
+          [[ -f "$f" ]] && awk '/^[Hh]ost /{print $2}' "$f"
+      done; } 2>/dev/null \
+        | grep -vE '[*?]' | sort -u
+}
+
+usb_disks() {
+    # (label) mount fstype size for currently-mounted removable/btrfs media.
+    findmnt -rn -o TARGET,FSTYPE,SIZE | awk '$1 ~ /^\/run\/media\// || $2=="btrfs"' \
+        | sort -u
+}
+
+info "Scanning for backup targets..."
+
+SSH_CANDS=()
+mapfile -t SSH_CANDS < <(ssh_hosts)
+
+USB_CANDS=()
+mapfile -t USB_CANDS < <(usb_disks)
+
+# ---- Stage 2: choose a target --------------------------------------------
+choices=("local-only  -- hourly snapshots on $POOL (no off-site copy)")
+for h in "${SSH_CANDS[@]}"; do
+    choices+=("ssh: $h")
+done
+for u in "${USB_CANDS[@]}"; do
+    choices+=("usb: $u")
+done
+if (( ${#choices[@]} == 1 )); then
+    choices+=("ssh: (type a host manually later)")
+fi
+
+info "Pick a backup destination"
+pick=$(printf '%s\n' "${choices[@]}" | gum choose --header "Backup destination:")
+[[ -n "$pick" ]] || { echo "cancelled"; exit 1; }
+
+REMOTE="none"
+[[ "$pick" == local-only* ]] && REMOTE="none"
+[[ "$pick" == ssh:* ]] && REMOTE="ssh"
+[[ "$pick" == usb:* ]] && REMOTE="usb"
+
+# ---- Stage 3: collect remote details + verify accessibility --------------
+case "$REMOTE" in
+    none) : ;;
+    ssh)
+        if [[ "$pick" == *"type a host manually"* ]]; then
+            HOST=$(gum input --prompt "SSH host > ")
+            [[ -n "$HOST" ]] || { echo "aborted"; exit 1; }
+        else
+            HOST="${pick#ssh: }"
+        fi
+        RUSER=$(gum input --prompt "SSH user (must have btrfs/btrbk on server) > ")
+        [[ -n "$RUSER" ]] || RUSER=root
+        TARGET=$(gum input --prompt "server target dir (absolute, e.g. /srv/btrbk) > ")
+        [[ "$TARGET" == /* ]] || { echo "target must be absolute"; exit 1; }
+        SSH_URI="$RUSER@$HOST"
+
+        info "Checking access to $SSH_URI ..."
+        if ! ssh -q -o BatchMode=yes -o ConnectTimeout=5 "$SSH_URI" 'true' 2>/dev/null; then
+            gum style --foreground 1 \
+                "cannot reach $SSH_URI with the current key."
+            gum style --foreground 3 \
+                "  install the backup (root) key on the server, then re-run:"
+            gum style --foreground 3 \
+                "    ssh-copy-id $SSH_URI"
+            exit 1
+        fi
+        ok
+        if ! ssh -q "$SSH_URI" 'command -v btrfs >/dev/null && command -v btrbk >/dev/null' 2>/dev/null; then
+            gum style --foreground 1 \
+                "server lacks btrfs/btrbk; install btrbk + btrfs-progs there." ; exit 1
+        fi
+        ;;
+    usb)
+        if [[ "$pick" == "usb: " ]]; then
+            echo "pick a concrete USB entry"; exit 1
+        fi
+        USBMNT=$(echo "$pick" | sed 's/^usb: //' | awk '{print $1}')
+        USBFS=$(findmnt -no FSTYPE "$USBMNT" 2>/dev/null || true)
+        [[ -d "$USBMNT" && -w "$USBMNT" ]] || { echo "USB not mounted/writable: $USBMNT"; exit 1; }
+        info "USB $USBMNT ($USBFS)"
+        if [[ "$USBFS" != "btrfs" ]]; then
+            gum style --foreground 1 \
+                "not btrfs -> btrbk cannot send snapshots; config-only + misc rsync will be set up."
+        fi
+        ;;
+esac
+
+# ---- Stage 4: confirm -----------------------------------------------------
+info "Summary"
+gum style --faint "  local pool mount : $POOL"
+gum style --faint "  remote           : $([ "$REMOTE" = none ] && echo 'none (local snapshots only)' || echo "$REMOTE")"
+if [[ "$REMOTE" = ssh ]]; then
+    gum style --faint "    ssh_uri        : $SSH_URI"
+    gum style --faint "    server target  : $TARGET"
+elif [[ "$REMOTE" = usb ]]; then
+    gum style --faint "    usb mount      : $USBMNT"
+    gum style --faint "    btrfs          : $([ "$USBFS" = btrfs ] && echo yes || echo no)"
+fi
+gum style --faint "  hourly timer     : btrbk-backup.timer"
+gum confirm "Apply this backup setup?" || { echo "aborted"; exit 1; }
+
+# ---- Stage 5: apply -------------------------------------------------------
+info "Installing packages (btrbk, rsync)"
+pacman -Syu --needed --noconfirm btrbk rsync
+
+info "Mounting btrfs pool at top level"
+mkdir -p "$POOL"
+SRC="$(findmnt -no SOURCE /)"
+UUID="$(blkid -s UUID -o value "$SRC")"
+grep -q "$POOL" /etc/fstab 2>/dev/null || \
+    printf 'UUID=%s  %s  btrfs  rw,subvolid=5,compress=zstd  0 0\n' "$UUID" "$POOL" >> /etc/fstab
+
+info "Writing btrbk config"
+mkdir -p "$CONF_DIR"
+cat > "$CONF" <<EOF
+# generated by setup-backup
+transaction_log /var/log/btrbk.log
+lockfile /var/lock/btrbk.lock
+
+snapshot_preserve_min latest
+snapshot_preserve 3d 1w 1m
+
+volume $POOL
+    snapshot_dir btrbk_snapshots
+
+    subvolume @
+        snapshot_name root
+
+    subvolume @home
+        snapshot_name home
+EOF
+
+btrfs_send=0
+if [[ "$REMOTE" = ssh ]]; then
+    cat >> "$CONF" <<EOF
+
+    ssh_uri $SSH_URI
+    target  $TARGET
+    target_preserve_min no
+    target_preserve 3d 1w 3m
+EOF
+    btrfs_send=1
+elif [[ "$REMOTE" = usb && "$USBFS" = btrfs ]]; then
+    cat >> "$CONF" <<EOF
+
+    target  $USBMNT/btrbk
+    target_preserve_min no
+    target_preserve 3d 1w 3m
+EOF
+    btrfs_send=1
+fi
+
+info "Writing backup driver"
+if [[ "$REMOTE" = ssh ]]; then
+    MISC_DEST="$SSH_URI:$TARGET/../configs"
+    BACKUP_SSH_HOST="$SSH_URI"
+    BACKUP_USB_DIR=""
+elif [[ "$REMOTE" = usb ]]; then
+    MISC_DEST="$USBMNT/configs"
+    BACKUP_SSH_HOST=""
+    BACKUP_USB_DIR="$USBMNT"
+else
+    MISC_DEST=""
+    BACKUP_SSH_HOST=""
+    BACKUP_USB_DIR=""
+fi
+
+cat > "$ENV" <<EOF
+BACKUP_SSH_HOST="$BACKUP_SSH_HOST"
+BACKUP_USB_DIR="$BACKUP_USB_DIR"
+MISC_DEST="$MISC_DEST"
+EOF
+
+cat > "$RUNNER" <<'EOF'
+#!/usr/bin/env bash
+# Hourly backup driver. See install/setup-backup for how the remote was chosen.
+set -uo pipefail
+POOL=/mnt/btr_pool
+if ! mountpoint -q "$POOL"; then
+    echo "btr_pool not mounted; skipping (will retry next hour)"; exit 0
+fi
+mkdir -p "$POOL/btrbk_snapshots"
+btrbk run; rc=$?
+
+source /etc/btrbk/backup.env
+avail=0
+if [[ -n "${BACKUP_SSH_HOST:-}" ]] && ssh -q -o BatchMode=yes -o ConnectTimeout=4 "${BACKUP_SSH_HOST}" true 2>/dev/null; then avail=1; fi
+if [[ -n "${BACKUP_USB_DIR:-}" ]] && mountpoint -q "${BACKUP_USB_DIR}"; then avail=1; fi
+if (( avail )) && [[ -n "${MISC_DEST:-}" ]]; then
+    stage=$(mktemp -d)
+    pacman -Qqe > "$stage/explicit-packages.txt" 2>/dev/null || true
+    for d in /var/lib/iwd /var/lib/bluetooth; do
+        [[ -d "$d" ]] && cp -a "$d" "$stage/$(basename "$d")"
+    done
+    rsync -a "$stage/" "$MISC_DEST/" 2>/dev/null || echo "misc rsync failed"
+    rm -rf "$stage"
+fi
+exit "$rc"
+EOF
+chmod 755 "$RUNNER"
+
+info "Fast SSH timeouts so off-network hourly runs fail fast"
+mkdir -p /root/.ssh
+printf 'Host *\n  ConnectTimeout 4\n' > /root/.ssh/config
+chmod 600 /root/.ssh/config
+
+info "Enabling hourly timer"
+cat > /etc/systemd/system/btrbk-backup.service <<'EOF'
+[Unit]
+Description=btrbk local snapshots + optional remote backup
+After=local-fs.target
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/backup-run.sh
+EOF
+cat > /etc/systemd/system/btrbk-backup.timer <<'EOF'
+[Unit]
+Description=Hourly btrbk backup
+[Timer]
+OnCalendar=*-*-* *:00:15
+[Install]
+WantedBy=timers.target
+EOF
+systemctl enable btrbk-backup.timer >/dev/null 2>&1
+
+gum style --foreground 2 --bold "Backup setup complete."
+gum style --faint "  config : $CONF"
+gum style --faint "  env    : $ENV"
+gum style --faint "  timer  : btrbk-backup.timer (first run next hour, or: systemctl start btrbk-backup.service)"

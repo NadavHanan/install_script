@@ -135,7 +135,8 @@ if [[ "${ARCHINSTALL_ENCRYPT:-0}" == "1" ]]; then
         }' "$ARCH_CFG" > "$ARCH_CFG.tmp" && mv "$ARCH_CFG.tmp" "$ARCH_CFG"
 fi
 
-run "Running archinstall (this can take a while)" \
+substage "archinstall: partitioning + base install (takes a while)"
+run "Running archinstall" \
     archinstall --config "$ARCH_CFG" --creds "$CREDS" --silent
 
 # ---- Phase 3: post-install ---------------------------------------------

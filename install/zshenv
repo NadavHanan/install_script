@@ -1,2 +1,10 @@
-# Tell zsh to read its configs from ~/.config/zsh/ instead of ~/.
-export ZDOTDIR="$HOME/.config/zsh"
+# zsh reads /etc/zsh/zshenv before any $ZDOTDIR rc files. We point ZDOTDIR at
+# ~/.config/zsh and source the (non-dot, since it lives in .config) `zshrc`
+# ourselves. ZDOTDIR changes the *directory* zsh scans, but zsh only auto-loads
+# dotfiles (.zshenv/.zshrc/...) from there, so a plain `zshrc` must be sourced
+# explicitly. Only load it for interactive shells to avoid pulling prompt /
+# keymap setup into scripts (`zsh -c '...'`, cron, etc).
+export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
+if [[ -o interactive && -f "$ZDOTDIR/zshrc" ]]; then
+    source "$ZDOTDIR/zshrc"
+fi

@@ -14,7 +14,6 @@ curl -sL https://github.com/NadavHanan/install_script/install.sh | bash
 ./install.sh --verbose             # also stream command output to terminal
 ./install.sh --disk /dev/nvme0n1   # override autodetected disk
 ARCHINSTALL_ENCRYPT=1 ./install.sh # opt into LUKS disk encryption
-INSTALL_BTRBK=1      ./install.sh # also set up btrbk snapshots (local; remote opt-in)
 ```
 
 ## What it does
@@ -58,11 +57,11 @@ config to match the chosen disk).
   - `mimeapps.list` — copied to `~/.config/mimeapps.list`
   - `zshenv`        — copied to `/etc/zsh/zshenv` (sets `ZDOTDIR`)
   - `POST_INSTALL.md` — copied to `~/POST_INSTALL.md`
-  - `btrbk.sh`      — optional btrbk snapshots (via `INSTALL_BTRBK=1`); local-only by default
-    - `btrbk.conf`, `backup.env`, `backup-run.sh`, `btrbk-backup.{service,timer}`
-- `bin/` — repo commands; copied into `~/.local/bin/` on setup. `passmenu` lives here.
+- `bin/` — repo commands; copied (executable) into `~/.local/bin/` on setup.
+  `setup-backup` configures the optional remote backup later; `install_hebrew_fonts`
+  installs Hebrew fonts and is also run once during setup.
 - `dotfiles/` — per-tool config; copied into `~/.config/<dir>` on setup.
-  `dotfiles/zsh/.zshrc` is sourced because `ZDOTDIR` is set in `/etc/zsh/zshenv`.
+  `dotfiles/zsh/zshrc` is sourced because `ZDOTDIR` is set in `/etc/zsh/zshenv`.
 
 ## Replacing a tool
 

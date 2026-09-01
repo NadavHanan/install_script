@@ -22,6 +22,13 @@ sudo -u "$USERNAME" git config --global user.email "$GIT_EMAIL"
 sudo -u "$USERNAME" git config --global init.defaultBranch master
 sudo -u "$USERNAME" git config --global pull.rebase true
 
+# zsh is the default shell; make sure it's in /etc/shells for chsh.
+ZSHPATH="$(command -v zsh)"
+if [[ -n "$ZSHPATH" ]]; then
+    grep -Fxq "$ZSHPATH" /etc/shells 2>/dev/null || echo "$ZSHPATH" >> /etc/shells
+    chsh -s "$ZSHPATH" "$USERNAME"
+fi
+
 # passmenu is handled by bin.sh (copies bin/passmenu).
 chown -R "$USERNAME:$USERNAME" "$HOME_DIR/.config"
 step_ok

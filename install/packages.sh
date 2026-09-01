@@ -24,7 +24,7 @@ trap cleanup EXIT
 
 PKGS=(
     # base
-    base-devel linux-headers openssh
+    base-devel linux-headers openssh curl git
 
     # docs
     man-db man-pages
@@ -49,8 +49,8 @@ PKGS=(
     # xdg + cursor theme
     xdg-user-dirs adwaita-cursors adwaita-icon-theme
 
-    # terminal / shell
-    kitty zsh zsh-syntax-highlighting zsh-completions fzf tealdeer
+    # terminal / shell / editor
+    foot zsh zsh-syntax-highlighting zsh-completions fzf tealdeer neovim
 
     # fonts
     ttf-cascadia-code-nerd ttf-font-awesome
@@ -86,6 +86,7 @@ fi
 AUR_PKGS=(
     zen-browser-bin
     tofi-bin
+    ttf-ms-fonts
 )
 if command -v yay >/dev/null; then
     sudo -u "$USERNAME" yay -S --needed --noconfirm "${AUR_PKGS[@]}"

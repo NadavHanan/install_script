@@ -20,7 +20,7 @@ NetworkManager. Here's the lay of the land.
 | Files        | nautilus (auto-mount via udiskie)           |
 | Power        | power-profiles-daemon                       |
 | Browser      | zen-browser                                 |
-| Terminal     | kitty                                       |
+| Terminal     | foot                                       |
 | Shell        | zsh + fzf (`ZDOTDIR=$HOME/.config/zsh`)     |
 | Editor       | nvim                                        |
 | PDF / image  | zathura / imv                               |
@@ -63,48 +63,43 @@ NetworkManager. Here's the lay of the land.
 
 ## Backups (btrbk)
 
-Installed only when `INSTALL_BTRBK=1` at install time. A timer
-(`btrbk-backup.timer`) takes a local btrfs snapshot every hour and prunes to
-retention.
+Local snapshots always run via the `btrbk-backup.timer` as soon as the
+prerequisites exist (btrfs on `/`, package `btrbk`). Adding an **off-site**
+target is a post-install step — nothing remote is configured during install.
+Run:
+
+```sh
+setup-backup
+```
+
+The wizard
+1. scans candidate targets: named SSH hosts (`~/.ssh/config`) and
+   mounted/removable btrfs media;
+2. asks which to use (SSH server, USB disk, or local-only);
+3. verifies the target is reachable/usable (SSH key auth, or USB mounted);
+4. shows a summary and asks for confirmation;
+5. installs `btrbk`/`rsync`, mounts the pool, writes `/etc/btrbk/btrbk.conf`
+   + `backup.env` + the hourly timer, and (for SSH) points a root key at the
+   server.
 
 - Retention: **local** 3 daily + 1 weekly + 1 monthly; snapshots live under
   `/mnt/btr_pool/btrbk_snapshots` (thin reflinks — cheap).
 - Snapshots of `@` (= `/`) and `@home` are made. `@log` and `@pkg` are
   skipped — journal/pacman-cache snapshots waste space.
-- Local snapshots are `systemd`-driven and keep running even with no remote
-  target; they protect against accidental edits/deletes, **not** disk
-  failure or theft.
+- A remote target (btrfs) also applies `target_preserve 3d 1w 3m`.
 
 Inspect: `btrbk list`, `btrbk status`. The log is `/var/log/btrbk.log`, and
 no `Persistent=true` is set, so a laptop left closed won't replay a backlog.
 
-### Remote target (opt-in)
+### Remote notes
 
-Backups run only when the target is reachable (home LAN or a plugged-in
-USB disk). The hourly run simply skips an unreachable target.
-
-1. Pick a transport (SSH server **or** USB disk) and uncomment that block
-   under `volume /mnt/btr_pool` in `/etc/btrbk/btrbk.conf`. The target must
-   be a **btrfs** filesystem. Remote retention keeps **more** (3 monthly).
-   - SSH: set `ssh_uri` + `target` (install `btrbk` on the server).
-   - USB: set `target /mnt/backup/btrbk` (mount an btrfs-formatted disk
-     there; `udiskie` won't auto-mount a btrfs partition — add an fstab
-     entry or use `mount`).
-2. In `/etc/btrbk/backup.env`, set:
-   - `BACKUP_SSH_HOST=user@host` (for SSH) **or** `BACKUP_USB_DIR=/mnt/backup`
-   - `MISC_DEST=` — rsync destination for the small config files. Format:
-     SSH `user@host:/path`, USB `/mnt/backup/misc`.
-3. For SSH only, install the root SSH key on the server so backups run
-   non-interactively:
-   ```sh
-   sudo ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519
-   sudo ssh-copy-id admin@<server>
-   ```
-   The server's btrbk target user must also be able to run `btrfs`.
-
-On each hourly run, once reachable, btrbk sends incrementally to the target
-and rsyncs `/var/lib/iwd`, `/var/lib/bluetooth`, and
-`explicit-packages.txt` (from `pacman -Qqe`) to `MISC_DEST`.
+- Backups run only while the target is reachable (home LAN or a plugged-in
+  USB disk); the hourly run skips an unreachable target.
+- The target must be **btrfs** for snapshot send. A non-btrfs USB target
+  still gets the small-config rsync (`/var/lib/iwd`, `/var/lib/bluetooth`,
+  `explicit-packages.txt`) but no btrbk send.
+- USB btrfs disks won't be auto-mounted by `udiskie`; add an fstab entry or
+  mount before running `setup-backup`.
 
 Storage note: local snapshots add a few GB; the remote grows with retained
 history — roughly 1.2–2.5x your root+home usage, dominated by the 3-monthly

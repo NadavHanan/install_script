@@ -1,6 +1,7 @@
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
-
+local termlunch = "uwsm-app -- " .. Terminal .. " "
+local hl
 -- main binds
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(Terminal))
 hl.bind(mainMod .. " + X", hl.dsp.window.close())
@@ -12,7 +13,7 @@ hl.bind(mainMod .. " + F", hl.dsp.exec_cmd(FileManager))
 -- tuis
 local function launch_tui(app)
   return function()
-    hl.dispatch(hl.dsp.exec_cmd("uwsm-app -- kitty " .. app, {
+    hl.dispatch(hl.dsp.exec_cmd(termlunch .. app, {
       float = true,
       center = true,
       size = { 800, 600 }
@@ -44,7 +45,7 @@ end)
 -- scratchpad
 hl.bind(mainMod .. " + S", function()
   if hl.get_window("class:^(scratchpad-term)$") == nil then
-    hl.exec_cmd("uwsm-app -- kitty --class scratchpad-term", { workspace = "special:magic" })
+    hl.exec_cmd(termlunch .. "--class scratchpad-term", { workspace = "special:magic" })
   else
     hl.dispatch(hl.dsp.workspace.toggle_special("magic"))
   end

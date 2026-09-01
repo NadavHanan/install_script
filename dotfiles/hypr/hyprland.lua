@@ -1,4 +1,4 @@
-Terminal    = "kitty"
+Terminal    = "foot"
 FileManager = "nautilus"
 Menu        = "tofi-drun --drun-launch=true"
 Browser     = "zen-browser"

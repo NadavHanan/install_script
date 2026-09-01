@@ -10,18 +10,21 @@ USERNAME="$1"
 GIT_NAME="$2"
 GIT_EMAIL="$3"
 
-# system.sh first: services, groups, fprintd PAM wiring.
-# reflector must rank mirrors BEFORE any package download, then packages
-# (which also needs the temporary passwordless sudo it owns for yay).
+# deploy-ordered: packages first so system.sh's systemctl enables succeed.
+substage "installing packages"
 bash "$REPO_ROOT/install/packages.sh" "$USERNAME"
+substage "system configuration"
 bash "$REPO_ROOT/install/system.sh"  "$USERNAME"
+substage "ranking mirrors"
 bash "$REPO_ROOT/install/reflector.sh"
+substage "user defaults"
 bash "$REPO_ROOT/install/user.sh"    "$USERNAME" "$GIT_NAME" "$GIT_EMAIL"
+substage "dotfiles"
 bash "$REPO_ROOT/install/dotfiles.sh" "$USERNAME"
+substage "bin scripts"
 bash "$REPO_ROOT/install/bin.sh"     "$USERNAME"
+# Hebrew fonts need network + curl; both present after packages.sh.
+substage "installing Hebrew fonts"
+bash "$REPO_ROOT/bin/install_hebrew_fonts"
+substage "post-install notes"
 bash "$REPO_ROOT/install/readme.sh"  "$USERNAME"
-
-# Optional btrbk backups (opt-in via INSTALL_BTRBK=1).
-if [[ "${INSTALL_BTRBK:-0}" == "1" ]]; then
-    bash "$REPO_ROOT/install/btrbk.sh"
-fi

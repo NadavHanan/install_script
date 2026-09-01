@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Install Google Font families that carry a Hebrew subset into /usr/share/fonts.
+#
+# Fetches the google/fonts repo archive once, but only extracts the small
+# per-family METADATA.pb files to discover which families have Hebrew, then
+# extracts just those families' .ttf files. Much cheaper than expanding the
+# whole (multi-GB) tree. Idempotent; safe to re-run.
+#
+# Needs curl (or wget). Runs as root (re-execs via sudo otherwise).
+set -euo pipefail
+
+# --- elevate to root if needed ------------------------------------------
+if (( EUID != 0 )); then
+    command -v sudo >/dev/null 2>&1 || { echo "need root (or sudo) to install fonts" >&2; exit 1; }
+    exec sudo "$0" "$@"
+fi
+
+# --- pick a downloader ---------------------------------------------------
+if command -v curl >/dev/null 2>&1; then
+    GET=(curl -fsSL)
+elif command -v wget >/dev/null 2>&1; then
+    GET=(wget -qO-)
+else
+    echo "install_hebrew_fonts: need curl or wget" >&2; exit 1
+fi
+
+url="https://github.com/google/fonts/archive/main.tar.gz"
+dest="/usr/share/fonts/truetype/google-fonts-hebrew"
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+echo "> downloading Google Fonts archive (metadata scan)..."
+"${GET[@]}" "$url" > "$tmp/fonts.tar.gz"
+
+echo "> scanning METADATA.pb for Hebrew subsets..."
+mkdir -p "$tmp/meta"
+tar -xzf "$tmp/fonts.tar.gz" -C "$tmp/meta" '*/METADATA.pb'
+
+mapfile -t hebrew < <(
+    find "$tmp/meta" -name METADATA.pb | while read -r md; do
+        grep -q 'subsets: "hebrew"' "$md" && dirname "$md"
+    done
+)
+
+if (( ${#hebrew[@]} == 0 )); then
+    echo "no Hebrew fonts found (archive layout changed?)" >&2
+    exit 1
+fi
+
+echo "> installing ${#hebrew[@]} font families to $dest"
+mkdir -p "$dest"
+for d in "${hebrew[@]}"; do
+    rel=${d#"$tmp/meta/"}
+    tar -xzf "$tmp/fonts.tar.gz" -C "$tmp/meta" \
+        --wildcards "$rel/*.ttf" "$rel/*/*.ttf" 2>/dev/null || true
+    find "$d" -iname '*.ttf' -exec install -D -m644 -t "$dest" {} +
+done
+
+echo "> refreshing font cache..."
+fc-cache -f >/dev/null
+echo "Done. Hebrew fonts installed to $dest"

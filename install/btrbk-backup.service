@@ -1,9 +1,0 @@
-[Unit]
-Description=btrbk local snapshots + optional remote backup
-After=local-fs.target
-
-[Service]
-Type=oneshot
-# ssh ConnectTimeout is set in /root/.ssh/config by install/btrbk.sh so
-# unreachable-target probes fail fast instead of hanging.
-ExecStart=/usr/local/sbin/backup-run.sh
