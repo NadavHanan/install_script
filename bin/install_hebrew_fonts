@@ -15,17 +15,26 @@ if (( EUID != 0 )); then
     exec sudo "$0" "$@"
 fi
 
-# --- pick a downloader ---------------------------------------------------
+url="https://github.com/google/fonts/archive/main.tar.gz"
+dest="/usr/share/fonts/truetype/google-fonts/hebrew"
+
+# Already installed (e.g. you ran this once, or copied the set over)? Stop
+# right here — no network, no flaky giant tarball fetch. This is the "run it
+# locally" path.
+if find "$dest" -maxdepth 1 -iname '*.ttf' 2>/dev/null | grep -q .; then
+    echo "Hebrew Google fonts already present in $dest; latest fonts unchanged."
+    fc-cache -f >/dev/null
+    exit 0
+fi
+
+# --- pick a downloader (only reached when fonts are missing) -----------------
 if command -v curl >/dev/null 2>&1; then
-    GET=(curl -fsSL)
+    GET=(curl -fSL --retry 3 --retry-delay 2)
 elif command -v wget >/dev/null 2>&1; then
     GET=(wget -qO-)
 else
     echo "install_hebrew_fonts: need curl or wget" >&2; exit 1
 fi
-
-url="https://github.com/google/fonts/archive/main.tar.gz"
-dest="/usr/share/fonts/truetype/google-fonts-hebrew"
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
