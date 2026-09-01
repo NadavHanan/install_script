@@ -49,9 +49,3 @@ hl.window_rule({
   rounding    = 0,
 })
 
--- fouces browser when opening opening tab
-hl.on("window.title", function(w)
-  if w ~= hl.get_active_window() and w.class == "zen" then
-    hl.dispatch(hl.dsp.focus({ window = w }))
-  end
-end)

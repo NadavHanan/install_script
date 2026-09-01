@@ -17,8 +17,6 @@ opt.hlsearch = true
 
 -- Appearance
 opt.termguicolors = true
-vim.diagnostic.config({ virtual_text = true })
-vim.diagnostic.config({ float = { border = "rounded" }, })
 
 -- formatting
 opt.expandtab = true
@@ -31,14 +29,12 @@ opt.listchars = { trail = "·", nbsp = "␣" }
 -- Clipboard
 opt.clipboard:append("unnamedplus")
 
--- Consider "-" as part of keyword
-opt.iskeyword:append("-")
-
 -- Split Windows
 opt.splitright = true
 opt.splitbelow = true
 
 vim.diagnostic.config({
+  float = { border = "rounded" },
   signs = {
     text = {
       [vim.diagnostic.severity.ERROR] = " ",

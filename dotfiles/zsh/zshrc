@@ -64,7 +64,6 @@ source <(fzf --zsh)
 # requires zsh-syntax-highlighting package
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
-autoload -Uz compinit && compinit
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 
-export PATH="$PATH:$HOME/.bin"
+export PATH="$PATH:$HOME/.local/bin"

@@ -1,6 +1,5 @@
 vim.pack.add({
   "https://github.com/nvim-treesitter/nvim-treesitter",
-  "https://github.com/windwp/nvim-autopairs",
   "https://github.com/windwp/nvim-autopairs"
 }, { confirm = false })
 require("nvim-treesitter.install").update("all")

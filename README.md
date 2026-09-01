@@ -7,7 +7,8 @@ via small post-install scripts. Single-orchestrator UX, runs from the ISO.
 
 ```bash
 # from the ISO
-curl -sL https://github.com/NadavHanan/install_script/install.sh | bash
+curl -sL https://github.com/NadavHanan/install_script/install.sh \
+  | INSTALL_REPO=https://github.com/NadavHanan/install_script.git bash
 
 # or from a cloned repo:
 ./install.sh                       # clean output, logs to /tmp/arch-install-*.log
@@ -35,6 +36,7 @@ config to match the chosen disk).
 1. fast and minimal
 2. apps do one thing and do it well
 3. terminal and text files focused system
+4. hebrew and RTL support
 
 ## Layout
 
@@ -59,9 +61,12 @@ config to match the chosen disk).
   - `POST_INSTALL.md` — copied to `~/POST_INSTALL.md`
 - `bin/` — repo commands; copied (executable) into `~/.local/bin/` on setup.
   `setup-backup` configures the optional remote backup later; `install_hebrew_fonts`
-  installs Hebrew fonts and is also run once during setup.
+  installs Hebrew fonts on demand (the slimmer `install/hebrew-fonts.sh` handles
+  it during setup).
 - `dotfiles/` — per-tool config; copied into `~/.config/<dir>` on setup.
   `dotfiles/zsh/zshrc` is sourced because `ZDOTDIR` is set in `/etc/zsh/zshenv`.
+  The wallpaper binary is intentionally untracked — `install/dotfiles.sh` fetches
+  it at install time.
 
 ## Replacing a tool
 

@@ -8,4 +8,9 @@ FILE="${LINKS_FILE:-$HOME/Documents/md_files/links}"
 picked=$(cut -d: -f1 "$FILE" | tofi --prompt-text "choose: ")
 [[ -n "$picked" ]] || exit 0
 
-zen-browser "$(grep "^${picked}:" "$FILE" | cut -d: -f2-)"
+# Split on the FIRST colon only: the value is a URL and contains ':' itself.
+# The index() prefix match also avoids treating the label as a regex.
+url=$(awk -v k="$picked" 'index($0,k ":")==1 {sub(/^[^:]*:[ \t]*/,""); print; exit}' "$FILE")
+[[ -n "$url" ]] || exit 0
+
+zen-browser "$url"

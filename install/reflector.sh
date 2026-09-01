@@ -9,11 +9,14 @@ source "$REPO_ROOT/install/ui.sh"
 
 step "Ranking mirrors with reflector"
 
-reflector \
-    --protocol https \
-    --age 12 \
-    --latest 20 \
-    --sort rate \
-    --save /etc/pacman.d/mirrorlist
+# Best-effort: on a first boot the chroot's network (iwd) may not be up yet,
+# so don't let a failed ranking abort the rest of the setup.
+ranks=$(reflector --protocol https --age 12 --latest 20 --sort rate 2>/dev/null) \
+    || true
+if [[ -z "$ranks" ]]; then
+    gum style --faint "    reflector returned nothing (no network yet) — keeping default mirrorlist"
+else
+    printf '%s\n' "$ranks" > /etc/pacman.d/mirrorlist
+fi
 
 step_ok

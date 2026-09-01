@@ -26,7 +26,7 @@ hl.bind(mainMod .. " + CTRL + B", launch_tui("bluetui"))
 hl.bind(mainMod .. " + CTRL + A", launch_tui("wiremix"))
 hl.bind(mainMod .. " + CTRL + I", launch_tui("installer"))
 
-hl.bind("Print", hl.dsp.exec_cmd("grim|slurp|wl-copy"))
+hl.bind("Print", hl.dsp.exec_cmd('grim -g "$(slurp)" - | wl-copy'))
 
 -- Move focus with mainMod + arrow keys
 -- Move with mainMod + SHIFT

@@ -38,7 +38,6 @@ NetworkManager. Here's the lay of the land.
 - Super+F — file manager
 - Super+1..0 — workspaces
 - Super+S — scratchpad terminal
-- Super+Ctrl+I — installer
 - Print — screenshot region
 
 ## Day-to-day

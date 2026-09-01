@@ -184,7 +184,8 @@ fi
 
 info "Writing backup driver"
 if [[ "$REMOTE" = ssh ]]; then
-    MISC_DEST="$SSH_URI:$TARGET/../configs"
+    _parent="${TARGET%/}"; _parent="${_parent%/*}"   # sibling of the target, no ".."
+    MISC_DEST="$SSH_URI:$_parent/configs"
     BACKUP_SSH_HOST="$SSH_URI"
     BACKUP_USB_DIR=""
 elif [[ "$REMOTE" = usb ]]; then

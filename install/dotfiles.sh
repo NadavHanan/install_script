@@ -33,4 +33,15 @@ install -d -m755 /etc/zsh
 cp "$REPO_ROOT/install/zshenv" /etc/zsh/zshenv
 chmod 644 /etc/zsh/zshenv
 
+# The wallpaper binary isn't tracked in git anymore (keeps clones small);
+# fetch it on first install. Best-effort — skip silently if offline.
+WALL="$DOT_DIR/hypr/wallpaper.png"
+if [[ ! -f "$WALL" ]]; then
+    gum style --faint "    fetching wallpaper"
+    curl -fsSL --retry 2 \
+        "https://raw.githubusercontent.com/LagrangianLad/arch-minimal-wallpapers/main/wallpapers/hd/kitty.png" \
+        -o "$WALL" 2>/dev/null || rm -f "$WALL"
+    chown "$USERNAME:$USERNAME" "$WALL" 2>/dev/null || true
+fi
+
 step_ok
