@@ -13,9 +13,9 @@ GIT_EMAIL="$3"
 # system.sh first: services, groups, fprintd PAM wiring.
 # reflector must rank mirrors BEFORE any package download, then packages
 # (which also needs the temporary passwordless sudo it owns for yay).
+bash "$REPO_ROOT/install/packages.sh" "$USERNAME"
 bash "$REPO_ROOT/install/system.sh"  "$USERNAME"
 bash "$REPO_ROOT/install/reflector.sh"
-bash "$REPO_ROOT/install/packages.sh" "$USERNAME"
 bash "$REPO_ROOT/install/user.sh"    "$USERNAME" "$GIT_NAME" "$GIT_EMAIL"
 bash "$REPO_ROOT/install/dotfiles.sh" "$USERNAME"
 bash "$REPO_ROOT/install/bin.sh"     "$USERNAME"
