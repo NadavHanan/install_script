@@ -21,7 +21,9 @@ cp "$REPO_ROOT/install/mimeapps.list" "$HOME_DIR/.config/mimeapps.list"
 # of the legacy ~/.gitconfig. `--file` targets that exact path deterministically
 # (git's --global+XGD_CONFIG_HOME behaviour is version-dependent).
 GIT_CFG="$HOME_DIR/.config/git/config"
-mkdir -p "$(dirname "$GIT_CFG")"
+# Create the dir owned by the user, otherwise git (run as them) can't write
+# its .lock file into a root-owned directory.
+install -d -o "$USERNAME" -g "$USERNAME" "$(dirname "$GIT_CFG")"
 sudo -u "$USERNAME" git config --file "$GIT_CFG" user.name  "$GIT_NAME"
 sudo -u "$USERNAME" git config --file "$GIT_CFG" user.email "$GIT_EMAIL"
 sudo -u "$USERNAME" git config --file "$GIT_CFG" init.defaultBranch master
