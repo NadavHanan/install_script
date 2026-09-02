@@ -4,7 +4,7 @@
 set -euo pipefail
 
 pick=$(printf '%s\n' \
-    "passmenu" \
+    "passmenu-tofi" \
     "music" \
     "links" \
     "power-profile" \
