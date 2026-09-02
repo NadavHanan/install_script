@@ -27,8 +27,8 @@ for src in "$REPO_ROOT"/dotfiles/*; do
 done
 shopt -u dotglob
 
-# System-wide zshenv: point ZDOTDIR at ~/.config/zsh so the zshrc there
-# (copied from dotfiles/zsh/) is sourced for interactive shells.
+# System-wide zshenv: point ZDOTDIR at ~/.config/zsh so the .zshrc there
+# (copied from dotfiles/zsh/) is auto-loaded for interactive shells.
 install -d -m755 /etc/zsh
 cp "$REPO_ROOT/install/zshenv" /etc/zsh/zshenv
 chmod 644 /etc/zsh/zshenv

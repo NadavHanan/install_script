@@ -17,10 +17,20 @@ step "Configuring user defaults"
 mkdir -p "$HOME_DIR/.config"
 cp "$REPO_ROOT/install/mimeapps.list" "$HOME_DIR/.config/mimeapps.list"
 
-sudo -u "$USERNAME" git config --global user.name  "$GIT_NAME"
-sudo -u "$USERNAME" git config --global user.email "$GIT_EMAIL"
-sudo -u "$USERNAME" git config --global init.defaultBranch master
-sudo -u "$USERNAME" git config --global pull.rebase true
+# Write git's global config to the XDG location (~/.config/git/config) instead
+# of the legacy ~/.gitconfig. `--file` targets that exact path deterministically
+# (git's --global+XGD_CONFIG_HOME behaviour is version-dependent).
+GIT_CFG="$HOME_DIR/.config/git/config"
+mkdir -p "$(dirname "$GIT_CFG")"
+sudo -u "$USERNAME" git config --file "$GIT_CFG" user.name  "$GIT_NAME"
+sudo -u "$USERNAME" git config --file "$GIT_CFG" user.email "$GIT_EMAIL"
+sudo -u "$USERNAME" git config --file "$GIT_CFG" init.defaultBranch master
+sudo -u "$USERNAME" git config --file "$GIT_CFG" pull.rebase true
+
+# Use the GitHub CLI as git's credential helper for HTTPS remotes, so git
+# pushes/pulls via https authenticate with `gh` (run `gh auth login` once).
+sudo -u "$USERNAME" git config --file "$GIT_CFG" credential."https://github.com".helper "!/usr/bin/gh auth git-credential"
+sudo -u "$USERNAME" git config --file "$GIT_CFG" credential."https://gist.github.com".helper "!/usr/bin/gh auth git-credential"
 
 # zsh is the default shell; make sure it's in /etc/shells for chsh.
 ZSHPATH="$(command -v zsh)"

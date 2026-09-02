@@ -43,8 +43,8 @@ PKGS=(
     zathura imv mpv
     grim slurp wl-clipboard cliphist
 
-    # mirror ranking
-    reflector
+    # mirror ranking / github tooling
+    reflector github-cli
 
     # xdg + cursor theme
     xdg-user-dirs adwaita-cursors adwaita-icon-theme
@@ -53,7 +53,7 @@ PKGS=(
     foot zsh zsh-syntax-highlighting zsh-completions fzf tealdeer neovim
 
     # fonts
-    ttf-cascadia-code-nerd ttf-font-awesome
+    ttf-cascadia-code ttf-font-awesome
 
     # passwords
     pass pass-otp fprintd
@@ -85,7 +85,7 @@ fi
 # AUR packages
 AUR_PKGS=(
     zen-browser-bin
-    tofi-bin
+    tofi
     ttf-ms-fonts
 )
 if command -v yay >/dev/null; then

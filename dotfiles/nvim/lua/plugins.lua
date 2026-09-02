@@ -41,9 +41,10 @@ vim.pack.add({
 require("mason").setup()
 require("mason-lspconfig").setup({
   ensure_installed = {
-    "ruff",     -- python
-    "tinymist", -- typst
-    "clangd",   -- C/C++
+    "ruff",                 -- python
+    "tinymist",             -- typst
+    "clangd",               -- C/C++
+    "bash-language-server", --bash
   },
 })
 

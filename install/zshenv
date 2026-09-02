@@ -1,10 +1,7 @@
-# zsh reads /etc/zsh/zshenv before any $ZDOTDIR rc files. We point ZDOTDIR at
-# ~/.config/zsh and source the (non-dot, since it lives in .config) `zshrc`
-# ourselves. ZDOTDIR changes the *directory* zsh scans, but zsh only auto-loads
-# dotfiles (.zshenv/.zshrc/...) from there, so a plain `zshrc` must be sourced
-# explicitly. Only load it for interactive shells to avoid pulling prompt /
-# keymap setup into scripts (`zsh -c '...'`, cron, etc).
+# zsh reads /etc/zsh/zshenv before any $ZDOTDIR rc files. Point ZDOTDIR at
+# ~/.config/zsh so zsh then auto-loads ~/.config/zsh/.zshrc (a dotted startup
+# file in ZDOTDIR is picked up automatically). A plain `zshrc` would NOT be
+# auto-loaded and would trip zsh's first-run wizard, so the file is named
+# `.zshrc`. zsh only sources .zshrc for interactive shells, so prompt/keymap
+# setup never leaks into scripts (`zsh -c '...'`, cron, etc).
 export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
-if [[ -o interactive && -f "$ZDOTDIR/zshrc" ]]; then
-    source "$ZDOTDIR/zshrc"
-fi

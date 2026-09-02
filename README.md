@@ -64,7 +64,7 @@ config to match the chosen disk).
   installs Hebrew fonts on demand (the slimmer `install/hebrew-fonts.sh` handles
   it during setup).
 - `dotfiles/` — per-tool config; copied into `~/.config/<dir>` on setup.
-  `dotfiles/zsh/zshrc` is sourced because `ZDOTDIR` is set in `/etc/zsh/zshenv`.
+  `dotfiles/zsh/.zshrc` is auto-loaded because `ZDOTDIR` is set in `/etc/zsh/zshenv`.
   The wallpaper binary is intentionally untracked — `install/dotfiles.sh` fetches
   it at install time.
 

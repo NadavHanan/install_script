@@ -25,6 +25,28 @@ cp "$REPO_ROOT/install/greetd.toml" /etc/greetd/config.toml
 chmod 644 /etc/greetd/config.toml
 id greeter &>/dev/null || useradd -r -d /var/empty -s /usr/sbin/nologin greeter
 
+# The kernel writes its boot log to the fb console on tty1, which can show
+# through behind the greeter. Clear it once at boot. We can't rely on a
+# `quiet` kernel param: with a systemd-boot UKI the cmdline is embedded at
+# UKI build time, not ours to edit post-install.
+step "Clearing boot log from the login console"
+cat > /etc/systemd/system/clear-console.service <<'EOF'
+[Unit]
+Description=Clear lingering boot log from the login console
+DefaultDependencies=no
+After=systemd-vconsole-setup.service
+Before=greetd.service
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/sh -c '/usr/bin/setterm -reset </dev/tty1 >/dev/tty1 2>&1 || :'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable clear-console.service >/dev/null 2>&1
+
 # ---- User group memberships ---------------------------------------------
 # archinstall only adds wheel. Hyprland, printers, input devices need more.
 step "Adding $USERNAME to video, input, lp, audio, bluetooth"
