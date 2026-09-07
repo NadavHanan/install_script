@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# update — full system update (repo + AUR) in one command. Notifies when done.
+set -euo pipefail
+
+sudo pacman -Syu --needed
+if command -v yay >/dev/null; then
+    yay -Sua --needed
+fi
+
+notify-send "update" "system up to date" 2>/dev/null || true

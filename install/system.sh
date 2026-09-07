@@ -105,6 +105,11 @@ systemctl --global enable udiskie.service
 mkdir -p /var/lib/systemd/linger 2>/dev/null || true
 : > "/var/lib/systemd/linger/$USERNAME"
 
+# cliphist store watcher: same pattern (per-user unit, no upstream unit).
+step "Configuring cliphist (user service)"
+cp "$REPO_ROOT/install/cliphist-store.service" /etc/systemd/user/cliphist-store.service
+systemctl --global enable cliphist-store.service
+
 # pacman cosmetics: colour output + the (very important) ILoveCandy scrollbar.
 step "Configuring pacman (Color, ILoveCandy)"
 sed -i 's/^#Color/Color/' /etc/pacman.conf

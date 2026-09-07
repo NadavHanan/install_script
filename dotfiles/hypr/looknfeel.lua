@@ -32,6 +32,16 @@ hl.window_rule({
   size = { 400, 600 },
 })
 
+-- TUI helper terminals are tagged with app-id "TUI" by their launchers
+-- (bindings.lua launch_tui and bin/menus). Hand-opened terminals keep the
+-- default "foot" app-id, so they tile as normal.
+hl.window_rule({
+  match  = { class = "TUI" },
+  float  = true,
+  center = true,
+  size   = { 800, 600 },
+})
+
 -- Ref https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 -- "Smart gaps" / "No gaps when only"
 hl.workspace_rule({ workspace = "w[tv1]", gaps_out = 0, gaps_in = 0 })

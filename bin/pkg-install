@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# pkg-install — fzf picker over all repo packages, installs the selection.
+# Run inside a terminal (needs sudo for pacman). Inspired by omarchy-pkg-install.
+set -euo pipefail
+
+pkg=$(pacman -Slq | fzf --multi \
+    --preview 'pacman -Si {1}' \
+    --preview-window 'down:60%:wrap' \
+    --header 'tab: multi-select, enter: install, esc: quit')
+[[ -z "$pkg" ]] && exit 0
+
+# shellcheck disable=SC2086  # newline-separated -> args
+sudo pacman -S --needed ${pkg//$'\n'/ }

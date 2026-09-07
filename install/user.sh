@@ -41,6 +41,15 @@ if [[ -n "$ZSHPATH" ]]; then
     chsh -s "$ZSHPATH" "$USERNAME"
 fi
 
+# Seed the links file used by bin/links (menus -> links). Don't overwrite
+# on re-run — it's user data, not config.
+LINKS_FILE="$HOME_DIR/Documents/md_files/links"
+if [[ ! -f "$LINKS_FILE" ]]; then
+    mkdir -p "$(dirname "$LINKS_FILE")"
+    printf 'Arch Linux: https://archlinux.org\n' > "$LINKS_FILE"
+fi
+chown -R "$USERNAME:$USERNAME" "$HOME_DIR/Documents/md_files"
+
 # passmenu is handled by bin.sh (copies bin/passmenu).
 chown -R "$USERNAME:$USERNAME" "$HOME_DIR/.config"
 step_ok

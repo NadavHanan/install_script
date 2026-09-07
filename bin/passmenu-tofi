@@ -14,8 +14,16 @@ mapfile -t entries < <(find "$STORE" -name '*.gpg' \
 picked=$(printf '%s\n' "${entries[@]}" | tofi --prompt "pass > ")
 [[ -z "$picked" ]] && exit 0
 
+# ponytail: copied secrets stay in cliphist's history until it ages out;
+# proper fix is filtering in the cliphist-store watcher.
+copy_secret() {  # copy to both selections, wipe them after 45s (pass convention)
+    printf '%s' "$1" | wl-copy
+    printf '%s' "$1" | wl-copy --primary
+    ( sleep 45; wl-copy -c; wl-copy -pc ) &
+}
+
 if [[ "${1:-}" == "user" ]]; then
-    pass show "$picked" | awk '/^login:/ {print $2; exit}' | wl-copy
+    copy_secret "$(pass show "$picked" | awk '/^login:/ {print $2; exit}')"
 else
-    pass show -c "$picked" >/dev/null
+    copy_secret "$(pass show "$picked")"
 fi

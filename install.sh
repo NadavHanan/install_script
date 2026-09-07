@@ -113,7 +113,18 @@ while true; do
     gum style --foreground 1 "invalid username: lowercase letters, digits, - and _ only"
 done
 prompt_secret USER_PASSWORD "User password"
-prompt_secret ROOT_PASSWORD "Root password"
+
+# Root and LUKS default to the user password; opting out re-prompts.
+if confirm "Use the same password for root?"; then
+    ROOT_PASSWORD="$USER_PASSWORD"
+else
+    prompt_secret ROOT_PASSWORD "Root password"
+fi
+if confirm "Use the same password for disk encryption (LUKS)?"; then
+    ENCRYPT_PASSWORD="$USER_PASSWORD"
+else
+    prompt_secret ENCRYPT_PASSWORD "Encryption password"
+fi
 prompt        GIT_NAME      "Git name"
 prompt        GIT_EMAIL     "Git email"
 
@@ -123,10 +134,11 @@ if [[ -n "$FORCE_DISK" ]]; then
 else
     DISK=$(bash "$REPO_ROOT/install/disk.sh") || { step_fail; exit 1; }
 fi
-gum style --faint "    using $DISK"
+DISK_INFO=$(lsblk -dno MODEL,SIZE "$DISK" 2>/dev/null | xargs)
+gum style --faint "    using $DISK ($DISK_INFO)"
 
 echo
-if ! confirm "Proceed with this disk ($DISK)?"; then
+if ! confirm "Proceed with this disk ($DISK — $DISK_INFO)?"; then
     gum style --foreground 1 "Cancelled."
     exit 0
 fi
@@ -138,15 +150,18 @@ CREDS="$TMP_DIR/creds.json"
 # Read secrets from files so they never appear in this process's argv (ps).
 printf '%s' "$USER_PASSWORD" > "$TMP_DIR/userpw"
 printf '%s' "$ROOT_PASSWORD" > "$TMP_DIR/rootpw"
+printf '%s' "$ENCRYPT_PASSWORD" > "$TMP_DIR/encryptpw"
 jq \
    --arg user "$USERNAME" \
    --rawfile pw "$TMP_DIR/userpw" \
    --rawfile rpw "$TMP_DIR/rootpw" \
+   --rawfile epw "$TMP_DIR/encryptpw" \
    'walk(
       if type == "string"
       then gsub("__USER__"; $user)
            | gsub("__PASSWORD__"; $pw)
            | gsub("__ROOT_PASSWORD__"; $rpw)
+           | gsub("__ENCRYPT_PASSWORD__"; $epw)
       else .
       end
     )' \
@@ -156,11 +171,20 @@ jq \
 # disk_config.disk_encryption, and the encryption password is a top-level
 # creds key (encryption_password) that archinstall merges in.
 # Resize the btrfs root partition to fill the chosen disk, not the fixed 29GiB.
-# ROOT_START = boot partition's `start` (1 MiB) + its `size` (1 GiB ESP) from
-# archinstall/config.json — keep the numbers in sync with that file.
-DISK_SIZE=$(lsblk -bdno SIZE "$DISK") || { step_fail "could not stat $DISK"; exit 1; }
-ROOT_START=1074790400    # 1 MiB offset + 1 GiB ESP (see archinstall/config.json)
+# ROOT_START = boot partition's start + size in bytes, read straight from
+# archinstall/config.json (single source of truth). GPT_RESERVE is a layout
+# fact, not config: the backup GPT header lives in the disk's last sector.
+readarray -t BOOT_GEO < <(jq -r '
+    def tob: if .unit=="MiB" then .value*1048576
+             elif .unit=="GiB" then .value*1073741824
+             elif .unit=="KiB" then .value*1024
+             else .value end;
+    .disk_config.device_modifications[0].partitions[0]
+    | [(.start | tob), (.size | tob)] | .[]' \
+    "$REPO_ROOT/archinstall/config.json")
+ROOT_START=$(( ${BOOT_GEO[0]:-0} + ${BOOT_GEO[1]:-0} ))
 GPT_RESERVE=1048576      # 1 MiB backup GPT header
+DISK_SIZE=$(lsblk -bdno SIZE "$DISK") || { step_fail "could not stat $DISK"; exit 1; }
 ROOT_SIZE=$((DISK_SIZE - ROOT_START - GPT_RESERVE))
 if (( ROOT_SIZE <= 0 )); then
     step_fail "disk too small for 1 GiB ESP + root" >&2
@@ -175,19 +199,20 @@ jq \
     .disk_config.device_modifications[0].partitions[1].size.value=$size' \
    "$REPO_ROOT/archinstall/config.json" > "$ARCH_CFG"
 
-# opt into LUKS: add disk_encryption inside disk_config, encrypting the root
-# partition (obj_id from archinstall/config.json). Password flows via creds.
-if [[ "${ARCHINSTALL_ENCRYPT:-0}" == "1" ]]; then
-    jq '.disk_config.disk_encryption={
-            encryption_type:"luks",
-            partitions:["670f10e9-70ef-403d-b253-cf228d8740d0"],
-            iter_time:2000
-        }' "$ARCH_CFG" > "$ARCH_CFG.tmp" && mv "$ARCH_CFG.tmp" "$ARCH_CFG"
-fi
+# LUKS on by default: encrypt the root partition (obj_id from
+# archinstall/config.json). Password flows via creds; defaults to the user
+# password unless changed in the UI.
+jq '.disk_config.disk_encryption={
+        encryption_type:"luks",
+        partitions:["670f10e9-70ef-403d-b253-cf228d8740d0"],
+        iter_time:2000
+    }' "$ARCH_CFG" > "$ARCH_CFG.tmp" && mv "$ARCH_CFG.tmp" "$ARCH_CFG"
 
 substage "archinstall: partitioning + base install (takes a while)"
-run "Running archinstall" \
-    archinstall --config "$ARCH_CFG" --creds "$CREDS" --silent
+if ! run "Running archinstall" \
+        archinstall --config "$ARCH_CFG" --creds "$CREDS" --silent; then
+    exit 1
+fi
 
 # ---- Phase 3: post-install ---------------------------------------------
 step "Post-install"

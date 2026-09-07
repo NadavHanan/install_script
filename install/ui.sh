@@ -8,7 +8,9 @@ set -u
 
 UI_LOG="${UI_LOG:-/tmp/arch-install-$(date +%Y%m%d-%H%M%S).log}"
 mkdir -p "$(dirname "$UI_LOG")"
-: > "$UI_LOG"
+# Create only on first source: every install/*.sh sources this file, and
+# truncating each time would leave the log holding just the last substage.
+[[ -e "$UI_LOG" ]] || : > "$UI_LOG"
 
 command -v gum >/dev/null 2>&1 || {
     echo "gum not found in PATH; install gum first." >&2

@@ -1,71 +1,48 @@
 #!/usr/bin/env bash
-# Install Google Font families that carry a Hebrew subset into /usr/share/fonts.
+# Install a curated set of Hebrew-capable Google Fonts into /usr/share/fonts.
 #
-# Fetches the google/fonts repo archive once, but only extracts the small
-# per-family METADATA.pb files to discover which families have Hebrew, then
-# extracts just those families' .ttf files. Much cheaper than expanding the
-# whole (multi-GB) tree. Idempotent; safe to re-run.
-#
-# Needs curl (or wget). Runs as root (re-execs via sudo otherwise).
+# Sparse git clone of google/fonts — only the listed families are downloaded,
+# not the whole multi-GB repo. Idempotent; safe to re-run. Runs during setup
+# (from install/all.sh, repo bind-mounted in the chroot) and on demand.
 set -euo pipefail
 
-# --- elevate to root if needed ------------------------------------------
+FAMILIES=(heebo notosanshebrew assistant frankruhllibre rubik davidlibre
+          notoserifhebrew alef ibmplexsanshebrew miriamlibre arimo
+          varelaround tinos bonanova suezone)
+
+dest=/usr/share/fonts/truetype/google-fonts/hebrew
+
+# --- elevate to root if needed (on-demand use on the installed system) ----
 if (( EUID != 0 )); then
     command -v sudo >/dev/null 2>&1 || { echo "need root (or sudo) to install fonts" >&2; exit 1; }
     exec sudo "$0" "$@"
 fi
 
-url="https://github.com/google/fonts/archive/main.tar.gz"
-dest="/usr/share/fonts/truetype/google-fonts/hebrew"
-
-# Already installed (e.g. you ran this once, or copied the set over)? Stop
-# right here — no network, no flaky giant tarball fetch. This is the "run it
-# locally" path.
+# Already installed? Stop here — no network, no refetch.
 if find "$dest" -maxdepth 1 -iname '*.ttf' 2>/dev/null | grep -q .; then
-    echo "Hebrew Google fonts already present in $dest; latest fonts unchanged."
+    echo "Hebrew Google fonts already present in $dest"
     fc-cache -f >/dev/null
     exit 0
 fi
 
-# --- pick a downloader (only reached when fonts are missing) -----------------
-if command -v curl >/dev/null 2>&1; then
-    GET=(curl -fSL --retry 3 --retry-delay 2)
-elif command -v wget >/dev/null 2>&1; then
-    GET=(wget -qO-)
-else
-    echo "install_hebrew_fonts: need curl or wget" >&2; exit 1
-fi
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
 
-tmp=$(mktemp -d)
-trap 'rm -rf "$tmp"' EXIT
+# --- clone google/fonts without fetching any blobs yet -------------------
+git clone --quiet --depth 1 --filter=blob:none --sparse \
+    https://github.com/google/fonts.git "$work/fonts"
 
-echo "> downloading Google Fonts archive (metadata scan)..."
-"${GET[@]}" "$url" > "$tmp/fonts.tar.gz"
-
-echo "> scanning METADATA.pb for Hebrew subsets..."
-mkdir -p "$tmp/meta"
-tar -xzf "$tmp/fonts.tar.gz" -C "$tmp/meta" '*/METADATA.pb'
-
-mapfile -t hebrew < <(
-    find "$tmp/meta" -name METADATA.pb | while read -r md; do
-        grep -q 'subsets: "hebrew"' "$md" && dirname "$md"
-    done
-)
-
-if (( ${#hebrew[@]} == 0 )); then
-    echo "no Hebrew fonts found (archive layout changed?)" >&2
-    exit 1
-fi
-
-echo "> installing ${#hebrew[@]} font families to $dest"
-mkdir -p "$dest"
-for d in "${hebrew[@]}"; do
-    rel=${d#"$tmp/meta/"}
-    tar -xzf "$tmp/fonts.tar.gz" -C "$tmp/meta" \
-        --wildcards "$rel/*.ttf" "$rel/*/*.ttf" 2>/dev/null || true
-    find "$d" -iname '*.ttf' -exec install -D -m644 -t "$dest" {} +
+# --- pull only the families we want (fetches their font files) -----------
+cd "$work/fonts"
+sparse_set=()
+for f in "${FAMILIES[@]}"; do
+    sparse_set+=("ofl/$f")
 done
+git sparse-checkout set --no-cone "${sparse_set[@]}"
 
-echo "> refreshing font cache..."
+# --- install every font file from those families -------------------------
+mkdir -p "$dest"
+find "$work/fonts" -type f \( -iname '*.ttf' -o -iname '*.otf' \) \
+    -exec install -D -m644 -t "$dest" {} +
 fc-cache -f >/dev/null
 echo "Done. Hebrew fonts installed to $dest"

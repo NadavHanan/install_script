@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# system-menu — lock / poweroff / reboot picker (tofi). Run from Hyprland.
+set -euo pipefail
+
+pick=$(printf '%s\n' \
+    "lock" \
+    "reboot" \
+    "poweroff" \
+    | tofi --prompt "system > ")
+
+case "$pick" in
+    lock)     exec hyprlock ;;
+    reboot)   exec systemctl reboot -i ;;
+    poweroff) exec systemctl poweroff -i ;;
+    "")       exit 0 ;;
+esac

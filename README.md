@@ -14,14 +14,14 @@ curl -sL https://github.com/NadavHanan/install_script/install.sh \
 ./install.sh                       # clean output, logs to /tmp/arch-install-*.log
 ./install.sh --verbose             # also stream command output to terminal
 ./install.sh --disk /dev/nvme0n1   # override autodetected disk
-ARCHINSTALL_ENCRYPT=1 ./install.sh # opt into LUKS disk encryption
 ```
 
 ## What it does
 
 1. Installs `gum`, `jq`, `archinstall` from the repos (caller is online).
 2. Gum UI: username, password, git identity, disk.
-3. Runs `archinstall` with `archinstall/config.json` (no LUKS by default; iwd only).
+3. Runs `archinstall` with `archinstall/config.json` (LUKS on by default;
+   iwd only).
 4. Runs `install/all.sh` inside the new system via `arch-chroot`:
    services, mirror ranking, packages, user config, dotfiles, bin scripts,
    post-install README.
@@ -42,7 +42,7 @@ config to match the chosen disk).
 
 - `install.sh` — interactive orchestrator (runs outside the new install).
 - `archinstall/`
-  - `config.json` — static install preferences (iwd, pipewire, btrfs, no LUKS).
+  - `config.json` — static install preferences (iwd, pipewire, btrfs).
   - `creds.json`  — user/root password template, filled in by `jq gsub`.
 - `install/`
   - `ui.sh`         — gum UI helpers (step, run, prompt, box, heading, …)
@@ -61,8 +61,7 @@ config to match the chosen disk).
   - `POST_INSTALL.md` — copied to `~/POST_INSTALL.md`
 - `bin/` — repo commands; copied (executable) into `~/.local/bin/` on setup.
   `setup-backup` configures the optional remote backup later; `install_hebrew_fonts`
-  installs Hebrew fonts on demand (the slimmer `install/hebrew-fonts.sh` handles
-  it during setup).
+  installs the Hebrew font set (also run during setup by `install/all.sh`).
 - `dotfiles/` — per-tool config; copied into `~/.config/<dir>` on setup.
   `dotfiles/zsh/.zshrc` is auto-loaded because `ZDOTDIR` is set in `/etc/zsh/zshenv`.
   The wallpaper binary is intentionally untracked — `install/dotfiles.sh` fetches
@@ -82,14 +81,17 @@ Every user-facing tool is named in **one place**:
 | PDF viewer     | `install/mimeapps.list`              |
 | Image viewer   | `install/mimeapps.list`              |
 | Text editor    | `install/mimeapps.list`              |
-| Password UI    | `bin/passmenu`                       |
+| Password UI    | `bin/passmenu-tofi`                  |
 
 Swap one constant, re-run, done.
 
 ## Passwords
 
 - `pass` + `pass-otp` for password storage (db created by user).
-- `passmenu` (tofi picker → `wl-copy`) is in `bin/` and on `PATH`.
+- `passmenu-tofi` (tofi picker → `wl-copy`) is in `bin/` and on `PATH` —
+  distinct from `passmenu`, the dmenu script that ships with `pass`.
+- LUKS disk encryption is on by default; the password defaults to the user
+  password and can be changed in the installer UI.
 - `fprintd` is auto-enabled and wired into `/etc/pam.d/{greetd,hyprlock,sudo}`
   if a supported fingerprint sensor is detected at install time. See
   `POST_INSTALL.md` for caveats.

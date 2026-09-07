@@ -11,20 +11,18 @@ hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(Browser))
 hl.bind(mainMod .. " + F", hl.dsp.exec_cmd(FileManager))
 
 -- tuis
+-- All TUI helper terminals get the "TUI" app-id tag (float+center comes
+-- from the windowrule in looknfeel.lua). Terminals opened by hand keep the
+-- default foot app-id, so the rule never touches them.
 local function launch_tui(app)
   return function()
-    hl.dispatch(hl.dsp.exec_cmd(termlunch .. app, {
-      float = true,
-      center = true,
-      size = { 800, 600 }
-    }))
+    hl.dispatch(hl.dsp.exec_cmd(termlunch .. "--app-id TUI " .. app))
   end
 end
 
 hl.bind(mainMod .. " + CTRL + W", launch_tui("impala"))
 hl.bind(mainMod .. " + CTRL + B", launch_tui("bluetui"))
 hl.bind(mainMod .. " + CTRL + A", launch_tui("wiremix"))
-hl.bind(mainMod .. " + CTRL + I", launch_tui("installer"))
 
 hl.bind("Print", hl.dsp.exec_cmd('grim -g "$(slurp)" - | wl-copy'))
 

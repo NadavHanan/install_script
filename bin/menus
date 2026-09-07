@@ -1,19 +1,28 @@
 #!/usr/bin/env bash
 # menus — system action picker (tofi). Run from Hyprland.
-# Adds: passmenu, music, links, power-profile.
 set -euo pipefail
 
 pick=$(printf '%s\n' \
     "passmenu-tofi" \
+    "clipboard" \
     "music" \
     "links" \
     "power-profile" \
+    "install package" \
+    "update system" \
+    "system" \
     | tofi --prompt "system > ")
 
 case "$pick" in
-    passmenu)       exec passmenu ;;
+    passmenu-tofi)  exec passmenu-tofi ;;
+    clipboard)      exec clipmenu-tofi ;;
     music)          exec music ;;
     links)          exec links ;;
     power-profile)  exec power-profile ;;
+    # Needs a real terminal for the sudo prompt + fzf; app-id TUI triggers
+    # the float+center windowrule in looknfeel.lua.
+    "install package") exec foot --app-id TUI -e pkg-install ;;
+    "update system")   exec foot --app-id TUI -e update ;;
+    system)         exec system-menu ;;
     "")             exit 0 ;;
 esac

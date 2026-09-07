@@ -3,5 +3,5 @@
     { "username": "__USER__", "!password": "__PASSWORD__", "sudo": true, "groups": [] }
   ],
   "!root-password": "__ROOT_PASSWORD__",
-  "encryption_password": "__PASSWORD__"
+  "encryption_password": "__ENCRYPT_PASSWORD__"
 }

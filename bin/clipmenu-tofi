@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# clipmenu-tofi — pick a clipboard entry from cliphist, copy it back.
+# Needs the cliphist-store user service running (installed by system.sh).
+set -euo pipefail
+
+command -v cliphist >/dev/null 2>&1 || exit 0
+history=$(cliphist list 2>/dev/null) || exit 0
+[[ -n "$history" ]] || exit 0
+
+picked=$(printf '%s\n' "$history" | tofi --prompt "clip > ")
+[[ -z "$picked" ]] && exit 0
+
+# Drop it from history so copies don't accumulate duplicates.
+printf '%s' "$picked" | cliphist delete >/dev/null
+printf '%s' "$picked" | cliphist decode | wl-copy

@@ -27,13 +27,15 @@ NetworkManager. Here's the lay of the land.
 | Video        | mpv                                         |
 | Music        | impala (TUI)                                |
 | Printing     | cups + system-config-printer                |
-| Passwords    | pass + pass-otp + `passmenu` (tofi)         |
+| Passwords    | pass + pass-otp + `passmenu-tofi` (tofi)    |
 
 ## Key bindings (Hyprland)
 
 - Super+Return — terminal
 - Super+D — menu (tofi)
-- Super+Alt+Space — system actions (passmenu, music, links, power-profile)
+- Super+Alt+Space — system actions (passmenu-tofi, clipboard, music, links,
+  power-profile, install package, update system, system:
+  lock/reboot/poweroff)
 - Super+B — browser
 - Super+F — file manager
 - Super+1..0 — workspaces
@@ -49,9 +51,10 @@ NetworkManager. Here's the lay of the land.
 - Mount USB / external: `udiskie` is running in the session — just plug in
 - Wifi: `impala` (TUI) or `iwctl` directly. Waybar's network module is wired
   to `impala` on click.
-- Passwords: `passmenu` — pick an entry, copies to clipboard. `passmenu user`
-  copies the login line instead of the password. For 2FA codes, use
-  `pass otp <entry>` (provided by `pass-otp`).
+- Passwords: `passmenu-tofi` — pick an entry, copies to clipboard.
+  `passmenu-tofi user` copies the login line instead of the password. (Not
+  to be confused with `passmenu`, the dmenu script shipped by `pass`.) For
+  2FA codes, use `pass otp <entry>` (provided by `pass-otp`).
 - Unlock sudo / greetd / hyprlock: fingerprint via `fprintd` (if a
   supported sensor is present at install time), or type the password.
   Fingerprint unlock does **not** auto-unlock GNOME Keyring or similar
