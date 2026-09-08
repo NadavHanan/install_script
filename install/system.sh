@@ -110,6 +110,12 @@ step "Configuring cliphist (user service)"
 cp "$REPO_ROOT/install/cliphist-store.service" /etc/systemd/user/cliphist-store.service
 systemctl --global enable cliphist-store.service
 
+# wob OSD: socket-activated upstream unit (wob reads its stdin; the socket
+# is a FIFO at $XDG_RUNTIME_DIR/wob.sock that volume/brightness write to).
+# Starts lazily on first write; needs WAYLAND_DISPLAY imported (uwsm does).
+step "Enabling wob socket (user)"
+systemctl --global enable wob.socket
+
 # pacman cosmetics: colour output + the (very important) ILoveCandy scrollbar.
 step "Configuring pacman (Color, ILoveCandy)"
 sed -i 's/^#Color/Color/' /etc/pacman.conf

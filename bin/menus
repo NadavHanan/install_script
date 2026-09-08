@@ -3,7 +3,7 @@
 set -euo pipefail
 
 pick=$(printf '%s\n' \
-    "passmenu-tofi" \
+    "passmenu" \
     "clipboard" \
     "music" \
     "links" \

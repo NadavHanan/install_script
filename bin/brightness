@@ -13,9 +13,7 @@ esac
 pct=$(awk -v v="$(brightnessctl get)" -v m="$(brightnessctl max)" 'BEGIN{printf "%d\n", v/m*100}')
 [[ "$pct" -gt 100 ]] && pct=100
 
-PIPE="${WOB_PIPE:-/tmp/wobpipe}"
-if [[ -p "$PIPE" ]]; then
-    exec {fd}<>"$PIPE"
-    echo "$pct" >&"$fd"
-    exec {fd}>&-
+WOB_FIFO="${WOB_SOCK:-${XDG_RUNTIME_DIR:-}}/wob.sock"
+if [[ -p "$WOB_FIFO" ]]; then
+    printf '%s\n' "$pct" > "$WOB_FIFO" 2>/dev/null || :
 fi

@@ -84,7 +84,7 @@
   "pulseaudio": {
     "format": "{icon}",
     "on-click": "foot --app-id Wiremix wiremix",
-    "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on-click-right": "volume mute",
     "tooltip-format": "Playing at {volume}%",
     "scroll-step": 5,
     "format-muted": "󰝟",
