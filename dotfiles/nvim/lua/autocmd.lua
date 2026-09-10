@@ -7,22 +7,18 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   end,
 })
 
--- autoset background
-if vim.env.TMUX then
-  vim.api.nvim_set_hl(0, "Normal", { bg = "#000000" })
-end
-
+-- format on save
 vim.api.nvim_create_autocmd("BufWritePre", {
   callback = function(args)
     vim.lsp.buf.format({ bufnr = args.buf, async = false })
   end,
 })
 
--- only ruff does hover
+-- only jedi_language_server does hover
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
     local client = vim.lsp.get_client_by_id(args.data.client_id)
-    if client and (client.name == "jedi_language_server" or client.name == "ty") then
+    if client and (client.name == "ruff" or client.name == "ty") then
       client.server_capabilities.hoverProvider = false
     end
   end,

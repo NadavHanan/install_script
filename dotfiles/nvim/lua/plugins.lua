@@ -1,10 +1,15 @@
 vim.pack.add({
   "https://github.com/nvim-treesitter/nvim-treesitter",
-  "https://github.com/windwp/nvim-autopairs"
+  "https://github.com/windwp/nvim-autopairs",
 }, { confirm = false })
 require("nvim-treesitter.install").update("all")
 require("nvim-autopairs").setup()
 
+-- colorscheme
+vim.pack.add({ "https://github.com/folke/tokyonight.nvim" })
+vim.cmd.colorscheme("tokyonight-night")
+
+-- mini
 vim.pack.add({
   "https://github.com/echasnovski/mini.nvim",
 }, { confirm = false })
@@ -41,10 +46,11 @@ vim.pack.add({
 require("mason").setup()
 require("mason-lspconfig").setup({
   ensure_installed = {
-    "ruff",                 -- python
-    "tinymist",             -- typst
-    "clangd",               -- C/C++
-    "bash-language-server", --bash
+    "ruff", -- python
+    "ty",
+    "jedi_language_server",
+    "tinymist", -- typst
+    "clangd",   -- C/C++
   },
 })
 
@@ -72,22 +78,33 @@ require("blink.cmp").setup({
 
 -- lang
 vim.pack.add({
-  "https://github.com/benomahony/uv.nvim",           -- python
-  "https://github.com/chomosuke/typst-preview.nvim", -- typst
+  "https://github.com/benomahony/uv.nvim", -- python
 }, { confirm = false })
 
-require("typst-preview").setup({
-  opts = {
-    open_cmd = "chromium --app=%s",
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "uv",
+  once = true,
+  callback = function()
+    require("uv").setup({})
+  end,
+})
+
+vim.pack.add({
+  {
+    src = "https://github.com/chomosuke/typst-preview.nvim",
+    version = "v1.4.2",
   },
 })
 
-require("uv").setup({
-  opts = {
-    picker_integration = true,
-  },
+-- open watch for typst
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "typst",
+  once = true,
+  callback = function(args)
+    local pdf = args.file:gsub("%.typ$", ".pdf")
+    vim.fn.jobstart({ "typst", "watch", args.file, pdf })
+    vim.fn.jobstart({ "sh", "-c", 'until [ -f "' .. pdf .. '" ]; do sleep 0.1; done; exec zathura "' .. pdf .. '"' },
+      require("typst-preview").setup({ open_cmd = "chromium --app=%s" })
+      { detached = true })
+  end,
 })
-
--- colorscheme
-vim.pack.add({ "https://github.com/folke/tokyonight.nvim" })
-vim.cmd.colorscheme("tokyonight-night")

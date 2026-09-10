@@ -5,10 +5,6 @@ local map = function(keys, func, desc, mode)
   vim.keymap.set(mode, keys, func, { desc = desc })
 end
 
--- navigation
-map("<leader>j", "<C-d>zz", "down")
-map("<leader>k", "<C-u>zz", "up")
-
 map("<leader>g", function()
   if not vim.b.gmode_enabled then
     map("j", "gj")
@@ -30,8 +26,15 @@ map("-", "<CMD>Oil<CR>", "open perent dir with oil")
 -- clear search highlights with <Esc>
 map("<Esc>", "<cmd>nohlsearch<CR>")
 
--- lsp
-map("<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>")
+-- lsp & fzf lua
+map("<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", "Rename")
+
+map("<leader>ff", "<cmd>FzfLua files<cr>", "Find files")
+map("<leader>fg", "<cmd>FzfLua live_grep<cr>", "Grep")
+map("<leader>fr", "<cmd>FzfLua oldfiles<cr>", "Recent files")
+
+map("<leader>D", "<cmd>FzfLua diagnostics_document<cr>", "Buffer diagnostics")
+map("gd", "<cmd>FzfLua lsp_definitions<cr>", "Goto definition")
 
 -- write & run
 map("<leader>r", function()
@@ -50,7 +53,7 @@ map("<leader>r", function()
   elseif ft == "r" then
     vim.cmd("!Rscript --vanilla %")
   elseif ft == "sh" then
-    vim.cmd("!cat % | sh")
+    vim.cmd("!sh %")
   end
 end, "save and run")
 
@@ -94,4 +97,4 @@ map("<leader>h", function()
     vim.b.completion = true
     vim.notify("Hebrew mode: OFF")
   end
-end)
+e

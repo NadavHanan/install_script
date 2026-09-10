@@ -1,6 +1,7 @@
 local opt = vim.opt
 
-opt.swapfile = false
+-- turn off swap warning (the swap file still exist)
+opt.shortmess:append("A")
 opt.mouse = "a"
 opt.backspace = "indent,eol,start"
 -- Consider - as part of keyword
@@ -17,6 +18,8 @@ opt.hlsearch = true
 
 -- Appearance
 opt.termguicolors = true
+vim.diagnostic.config({ virtual_text = true })
+vim.diagnostic.config({ float = { border = "rounded" }, })
 
 -- formatting
 opt.expandtab = true
@@ -29,12 +32,14 @@ opt.listchars = { trail = "·", nbsp = "␣" }
 -- Clipboard
 opt.clipboard:append("unnamedplus")
 
+-- Consider "-" as part of keyword
+opt.iskeyword:append("-")
+
 -- Split Windows
 opt.splitright = true
 opt.splitbelow = true
 
 vim.diagnostic.config({
-  float = { border = "rounded" },
   signs = {
     text = {
       [vim.diagnostic.severity.ERROR] = " ",
