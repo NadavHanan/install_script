@@ -15,24 +15,23 @@ NetworkManager. Here's the lay of the land.
 | Idle/lock    | hypridle + hyprlock                         |
 | Audio        | pipewire (wpctl)                            |
 | Bluetooth    | bluez + bluetui                             |
-| Screenshot   | grim + slurp + wl-copy                      |
-| Clipboard    | cliphist + wl-copy                          |
+| Clipboard    | wl-copy + cliphist                          |
 | Files        | nautilus (auto-mount via udiskie)           |
+| Screenshot   | grim + slurp + wl-copy                      |
 | Power        | power-profiles-daemon                       |
 | Browser      | zen-browser                                 |
-| Terminal     | foot                                       |
-| Shell        | zsh + fzf (`ZDOTDIR=$HOME/.config/zsh`)     |
+| Terminal     | foot                                        |
+| Shell        | zsh                                         |
 | Editor       | nvim                                        |
 | PDF / image  | zathura / imv                               |
 | Video        | mpv                                         |
-| Music        | impala (TUI)                                |
 | Printing     | cups + system-config-printer                |
-| Passwords    | pass + pass-otp + `passmenu-tofi` (tofi)    |
+| Passwords    | pass + `passmenu-tofi` (tofi)               |
 
 ## Key bindings (Hyprland)
 
 - Super+Return — terminal
-- Super+D — menu (tofi)
+- Super+Space — menu (tofi-drun)
 - Super+Alt+Space — system actions (passmenu-tofi, clipboard, music, links,
   power-profile, install package, update system, system:
   lock/reboot/poweroff)
@@ -60,8 +59,6 @@ NetworkManager. Here's the lay of the land.
   Fingerprint unlock does **not** auto-unlock GNOME Keyring or similar
   secret stores — that's a separate `pam_gnome_keyring.so` only triggered
   by password auth.
-- Mirrors: re-rank with `sudo reflector --age 12 --latest 20 --sort rate \
-  --save /etc/pacman.d/mirrorlist`.
 
 ## Backups (btrbk)
 
@@ -110,7 +107,7 @@ retention. Drop `target_preserve` (e.g. to `1m`) to shrink it.
 ## Fingerprint
 
 - fprintd is only enabled and wired into PAM if a supported sensor is
-  detected at install time (probed via `lsusb`).
+  detected at install time (probed via /sys).
 - Some match-on-chip / "smart" sensors (common on newer Dell/HP/Lenovo
   laptops) need a separate AUR driver, or aren't supported by libfprint
   at all. Check `fprintd-list $USER` and the libfprint supported devices
@@ -149,4 +146,3 @@ Configs land in `/var/lib/iwd/<ssid>.psk` (auto-created on first connect).
 - iwd: https://wiki.archlinux.org/title/Iwd
 - pass: https://www.passwordstore.org/
 - pass-otp: https://github.com/tadfisher/pass-otp
-- reflector: https://wiki.archlinux.org/title/Reflector

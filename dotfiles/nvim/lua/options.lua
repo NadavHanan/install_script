@@ -1,9 +1,11 @@
 local opt = vim.opt
 
--- turn off swap warning (the swap file still exist)
-opt.shortmess:append("A")
 opt.mouse = "a"
 opt.backspace = "indent,eol,start"
+
+-- turn off swap warning (the swap file still exist)
+opt.shortmess:append("A")
+
 -- Consider - as part of keyword
 opt.iskeyword:append("-")
 
@@ -31,9 +33,6 @@ opt.listchars = { trail = "·", nbsp = "␣" }
 
 -- Clipboard
 opt.clipboard:append("unnamedplus")
-
--- Consider "-" as part of keyword
-opt.iskeyword:append("-")
 
 -- Split Windows
 opt.splitright = true

@@ -10,10 +10,6 @@ USERNAME="$1"
 GIT_NAME="$2"
 GIT_EMAIL="$3"
 
-# deploy-ordered: mirrors first so the big pacman install uses ranked
-# mirrors; packages before system.sh so its systemctl enables succeed.
-substage "ranking mirrors"
-bash "$REPO_ROOT/install/reflector.sh"
 substage "installing packages"
 bash "$REPO_ROOT/install/packages.sh" "$USERNAME"
 substage "system configuration"

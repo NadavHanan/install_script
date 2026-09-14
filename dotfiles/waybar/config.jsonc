@@ -56,7 +56,7 @@
     "tooltip-format-disconnected": "Disconnected",
     "interval": 3,
     "spacing": 1,
-    "on-click": "foot --app-id Impala impala"
+    "on-click": "foot --app-id TUI -e impala"
   },
   "battery": {
     "format": "{capacity}% {icon}",
@@ -83,7 +83,7 @@
   },
   "pulseaudio": {
     "format": "{icon}",
-    "on-click": "foot --app-id Wiremix wiremix",
+    "on-click": "foot --app-id TUI -e wiremix",
     "on-click-right": "volume mute",
     "tooltip-format": "Playing at {volume}%",
     "scroll-step": 5,

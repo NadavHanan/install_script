@@ -75,7 +75,7 @@ if has_fingerprint_sensor; then
     # Add pam_fprintd.so as sufficient before pam_unix for greetd, hyprlock,
     # and sudo. A bad PAM edit can lock the user out, so we keep this narrow:
     # we never delete or replace existing rules, only insert one line.
-    for pamfile in /etc/pam.d/greetd /etc/pam.d/hyprlock /etc/pam.d/sudo; do
+    for pamfile in /etc/pam.d/greetd /etc/pam.d/hyprlock /etc/pam.d/sudo /etc/pam.d/polkit-1; do
         [[ -f "$pamfile" ]] || continue
         if grep -q "pam_fprintd.so" "$pamfile"; then
             continue
@@ -116,7 +116,7 @@ systemctl --global enable cliphist-store.service
 step "Enabling wob socket (user)"
 systemctl --global enable wob.socket
 
-# pacman cosmetics: colour output + the (very important) ILoveCandy scrollbar.
+# pacman cosmetics: colour output + the ILoveCandy scrollbar.
 step "Configuring pacman (Color, ILoveCandy)"
 sed -i 's/^#Color/Color/' /etc/pacman.conf
 grep -q '^ILoveCandy' /etc/pacman.conf || \

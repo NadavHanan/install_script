@@ -97,4 +97,4 @@ map("<leader>h", function()
     vim.b.completion = true
     vim.notify("Hebrew mode: OFF")
   end
-e
+end)

@@ -24,7 +24,7 @@ trap cleanup EXIT
 
 PKGS=(
     # base
-    base-devel linux-headers openssh curl git bluez-utils
+    base-devel linux-headers openssh curl bluez-utils
 
     # docs
     man-db man-pages
@@ -34,12 +34,11 @@ PKGS=(
     xdg-desktop-portal xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
     qt5-wayland qt6-wayland
     polkit-gnome
+    uwsm
 
     # status / tray
     waybar mako wob swaybg bluetui wiremix brightnessctl impala
     power-profiles-daemon udiskie libnotify
-    # session startup (hyprland.lua wraps all launches in uwsm-app)
-    uwsm
 
     # menu / files / viewers
     nautilus gvfs file-roller
@@ -47,8 +46,8 @@ PKGS=(
     zathura zathura-pdf-mupdf imv mpv
     grim slurp wl-clipboard cliphist
 
-    # mirror ranking / github tooling
-    reflector github-cli xdg-utils
+    # github tooling
+    github-cli xdg-utils
 
     # xdg + cursor theme
     xdg-user-dirs adwaita-cursors adwaita-icon-theme

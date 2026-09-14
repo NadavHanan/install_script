@@ -2,15 +2,17 @@
 
 Modular Arch Linux bootstrap. Base install via `archinstall`, personal config
 via small post-install scripts. Single-orchestrator UX, runs from the ISO.
+has hebrew and RTL support.
 
 ## Usage
-
+install git and clone the repo
 ```bash
-# from the ISO
-curl -sL https://github.com/NadavHanan/install_script/install.sh \
-  | INSTALL_REPO=https://github.com/NadavHanan/install_script.git bash
+pacman -Sy git
+git clone https://github.com/NadavHanan/install_script.git
+```
 
-# or from a cloned repo:
+then run
+```bash
 ./install.sh                       # clean output, logs to /tmp/arch-install-*.log
 ./install.sh --verbose             # also stream command output to terminal
 ./install.sh --disk /dev/nvme0n1   # override autodetected disk
@@ -23,7 +25,7 @@ curl -sL https://github.com/NadavHanan/install_script/install.sh \
 3. Runs `archinstall` with `archinstall/config.json` (LUKS on by default;
    iwd only).
 4. Runs `install/all.sh` inside the new system via `arch-chroot`:
-   services, mirror ranking, packages, user config, dotfiles, bin scripts,
+   services, packages, user config, dotfiles, bin scripts,
    post-install README.
 
 The install disk is auto-detected as the single non-removable, non-loopback
@@ -31,12 +33,6 @@ block device. If multiple candidates exist, the installer aborts — pass
 `--disk` to choose manually (this rewrites `disk_config` in the archinstall
 config to match the chosen disk).
 
-## Philosophy
-
-1. fast and minimal
-2. apps do one thing and do it well
-3. terminal and text files focused system
-4. hebrew and RTL support
 
 ## Layout
 
@@ -49,7 +45,6 @@ config to match the chosen disk).
   - `disk.sh`       — disk autodetection
   - `all.sh`        — chroot entrypoint
   - `packages.sh`   — pacman install (+ AUR via yay)
-  - `reflector.sh`  — rank mirrors post-install
   - `system.sh`     — greetd, fprintd, bluez, cups, udiskie, power-profiles, sshd
   - `user.sh`       — git identity, mimeapps
   - `dotfiles.sh`   — copy `dotfiles/*` into `~/.config/*` + `/etc/zsh/zshenv`
