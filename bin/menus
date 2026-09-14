@@ -9,6 +9,7 @@ pick=$(printf '%s\n' \
     "links" \
     "power-profile" \
     "install package" \
+    "remove package" \
     "update system" \
     "system" \
     | tofi --prompt "system > ")
@@ -22,6 +23,7 @@ case "$pick" in
     # Needs a real terminal for the sudo prompt + fzf; app-id TUI triggers
     # the float+center windowrule in looknfeel.lua.
     "install package") exec foot --app-id TUI -e pkg-install ;;
+    "remove package")  exec foot --app-id TUI -e pkg-remove ;;
     "update system")   exec foot --app-id TUI -e update ;;
     system)         exec system-menu ;;
     "")             exit 0 ;;

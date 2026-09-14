@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# pkg-remove — fzf picker over installed packages, removes the selection.
+# Run inside a terminal (needs sudo for pacman).
+set -euo pipefail
+
+pkg=$(pacman -Qeq | fzf --multi \
+    --preview 'pacman -Qi {1}' \
+    --preview-window 'down:60%:wrap' \
+    --header 'tab: multi-select, enter: remove, esc: quit')
+[[ -z "$pkg" ]] && exit 0
+
+# shellcheck disable=SC2086  # newline-separated -> args
+sudo pacman -Rns ${pkg//$'\n'/ }

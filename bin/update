@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# update — full system update (repo + AUR) in one command. Notifies when done.
+# update — full system update (repo + AUR + orphans). Usage: update [-y]
 set -euo pipefail
 
-sudo pacman -Syu --needed
-if command -v yay >/dev/null; then
-    yay -Sua --needed
-fi
+yflag=""
+[[ ${1:-} == -y ]] && yflag="--noconfirm"
+
+sudo pacman -Syu $yflag
+command -v yay >/dev/null && yay -Sua $yflag
+sudo pacman -Qtdq | sudo pacman -Rns - $yflag 2>/dev/null || true
 
 notify-send "update" "system up to date" 2>/dev/null || true
