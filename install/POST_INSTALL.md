@@ -54,6 +54,11 @@ NetworkManager. Here's the lay of the land.
   `passmenu-tofi user` copies the login line instead of the password. (Not
   to be confused with `passmenu`, the dmenu script shipped by `pass`.) For
   2FA codes, use `pass otp <entry>` (provided by `pass-otp`).
+  The store is encrypted with a GPG key generated at install time —
+  **save that key**: `pass` has no password recovery. Back it up with
+  `gpg --export-secret-keys -a <key-id> > pass-key-backup.asc` and keep it
+  somewhere safe (the key ID is in `pass init` output or
+  `gpg --list-secret-keys`).
 - Unlock sudo / greetd / hyprlock: fingerprint via `fprintd` (if a
   supported sensor is present at install time), or type the password.
   Fingerprint unlock does **not** auto-unlock GNOME Keyring or similar
@@ -85,7 +90,8 @@ The wizard
   `/mnt/btr_pool/btrbk_snapshots` (thin reflinks — cheap).
 - Snapshots of `@` (= `/`) and `@home` are made. `@log` and `@pkg` are
   skipped — journal/pacman-cache snapshots waste space.
-- A remote target (btrfs) also applies `target_preserve 3d 1w 3m`.
+- A remote target (btrfs) also applies `target_preserve 3d 1w 3m 1y`
+  (1 yearly snapshot off-site).
 
 Inspect: `btrbk list`, `btrbk status`. The log is `/var/log/btrbk.log`, and
 no `Persistent=true` is set, so a laptop left closed won't replay a backlog.

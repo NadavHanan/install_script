@@ -80,7 +80,7 @@ case "$REMOTE" in
         else
             HOST="${pick#ssh: }"
         fi
-        RUSER=$(gum input --prompt "SSH user (must have btrfs/btrbk on server) > ")
+        RUSER=$(gum input --prompt "SSH user (needs btrfs-progs + sudo btrfs rule on server) > ")
         [[ -n "$RUSER" ]] || RUSER=root
         TARGET=$(gum input --prompt "server target dir (absolute, e.g. /srv/btrbk) > ")
         [[ "$TARGET" == /* ]] || { echo "target must be absolute"; exit 1; }
@@ -97,10 +97,24 @@ case "$REMOTE" in
             exit 1
         fi
         ok
-        if ! ssh -q "$SSH_URI" 'command -v btrfs >/dev/null && command -v btrbk >/dev/null' 2>/dev/null; then
+        if ! ssh -q "$SSH_URI" 'command -v btrfs >/dev/null' 2>/dev/null; then
             gum style --foreground 1 \
-                "server lacks btrfs/btrbk; install btrbk + btrfs-progs there." ; exit 1
+                "server lacks btrfs-progs; install btrfs-progs there." ; exit 1
         fi
+        # btrfs-progs-sudo backend (below) needs passwordless sudo for btrfs
+        # on the server. Verify now, not via a failing hourly timer later.
+        if ! ssh -q "$SSH_URI" 'sudo -n btrfs --version' >/dev/null 2>&1; then
+            gum style --foreground 1 \
+                "server user $RUSER cannot run btrfs via passwordless sudo."
+            gum style --foreground 3 \
+                "  add a sudoers rule on the server, e.g.:"
+            gum style --foreground 3 \
+                "    echo '$RUSER ALL=(root) NOPASSWD: /usr/bin/btrfs' \
+                    | sudo tee /etc/sudoers.d/btrbk-$RUSER"
+            exit 1
+        fi
+        # Target dir must exist before btrbk can receive into it
+        ssh -q "$SSH_URI" "mkdir -p '$TARGET'"
         ;;
     usb)
         if [[ "$pick" == "usb: " ]]; then
@@ -166,10 +180,11 @@ btrfs_send=0
 if [[ "$REMOTE" = ssh ]]; then
     cat >> "$CONF" <<EOF
 
-    ssh_uri $SSH_URI
-    target  $TARGET
+    target  ssh://$SSH_URI$TARGET
+    ssh_user $RUSER
+    backend_remote btrfs-progs-sudo
     target_preserve_min no
-    target_preserve 3d 1w 3m
+    target_preserve 3d 1w 3m 1y
 EOF
     btrfs_send=1
 elif [[ "$REMOTE" = usb && "$USBFS" = btrfs ]]; then
@@ -177,7 +192,7 @@ elif [[ "$REMOTE" = usb && "$USBFS" = btrfs ]]; then
 
     target  $USBMNT/btrbk
     target_preserve_min no
-    target_preserve 3d 1w 3m
+    target_preserve 3d 1w 3m 1y
 EOF
     btrfs_send=1
 fi
