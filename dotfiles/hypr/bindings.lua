@@ -23,6 +23,7 @@ end
 hl.bind(mainMod .. " + CTRL + W", launch_tui("impala"))
 hl.bind(mainMod .. " + CTRL + B", launch_tui("bluetui"))
 hl.bind(mainMod .. " + CTRL + A", launch_tui("wiremix"))
+hl.bind(mainMod .. " + C", launch_tui("qalc", { 480, 300 }))
 
 hl.bind("Print", hl.dsp.exec_cmd('grim -g "$(slurp)" - | wl-copy'))
 
