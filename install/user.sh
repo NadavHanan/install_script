@@ -56,21 +56,29 @@ chown -R "$USERNAME:$USERNAME" "$HOME_DIR/Documents/md_files"
 # pass: generate a GPG key and initialise the password store. Skipped on
 # re-run if the user already has a secret key for their git email.
 if ! sudo -u "$USERNAME" gpg --list-secret-keys --with-colons "$GIT_EMAIL" 2>/dev/null | grep -q '^sec:'; then
-    step "Setting up pass (GPG key + password store)"
-    prompt_secret KEY_PASSPHRASE "GPG key passphrase (protects your passwords)"
-    sudo -u "$USERNAME" gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
-        --quick-generate-key "$GIT_NAME <$GIT_EMAIL>" rsa3072 cert 0 <<<"$KEY_PASSPHRASE"
-    sudo -u "$USERNAME" gpg --batch --pinentry-mode loopback --passphrase "$KEY_PASSPHRASE" \
-        --quick-add-key "$(sudo -u "$USERNAME" gpg --list-secret-keys --with-colons "$GIT_EMAIL" | awk -F: '/^sec:/{print $5; exit}')" rsa3072 encr 0
-    unset KEY_PASSPHRASE
-    sudo -u "$USERNAME" pass init "$(sudo -u "$USERNAME" gpg --list-secret-keys --with-colons "$GIT_EMAIL" | awk -F: '/^sec:/{print $5; exit}')"
-    sudo -u "$USERNAME" pass git init
-    # Keep the key passphrase cached for a day so pass doesn't re-prompt.
-    GPG_DIR="$HOME_DIR/.gnupg"
-    install -d -m700 -o "$USERNAME" -g "$USERNAME" "$GPG_DIR"
-    if [[ ! -f "$GPG_DIR/gpg-agent.conf" ]]; then
-        printf 'default-cache-ttl 86400\nmax-cache-ttl 86400\n' > "$GPG_DIR/gpg-agent.conf"
-        chown "$USERNAME:$USERNAME" "$GPG_DIR/gpg-agent.conf"
+    if [[ ! -t 0 ]]; then
+        # prompt_secret would loop forever with no TTY. Don't hang installs.
+        gum style --faint "    no TTY — skipping pass/GPG setup; run it manually later"
+    else
+        step "Setting up pass (GPG key + password store)"
+        prompt_secret KEY_PASSPHRASE "GPG key passphrase (protects your passwords)"
+        # default = sign+cert primary; add a separate encryption subkey so the
+        # key can also sign (git commits), not just encrypt.
+        printf '%s' "$KEY_PASSPHRASE" | sudo -u "$USERNAME" gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
+            --quick-generate-key "$GIT_NAME <$GIT_EMAIL>" rsa3072 default 0
+        KEYGRIP=$(sudo -u "$USERNAME" gpg --list-secret-keys --with-colons "$GIT_EMAIL" | awk -F: '/^sec:/{print $5; exit}')
+        printf '%s' "$KEY_PASSPHRASE" | sudo -u "$USERNAME" gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
+            --quick-add-key "$KEYGRIP" rsa3072 encr 0
+        unset KEY_PASSPHRASE
+        sudo -u "$USERNAME" pass init "$KEYGRIP"
+        sudo -u "$USERNAME" pass git init
+        # Keep the key passphrase cached for a day so pass doesn't re-prompt.
+        GPG_DIR="$HOME_DIR/.gnupg"
+        install -d -m700 -o "$USERNAME" -g "$USERNAME" "$GPG_DIR"
+        if [[ ! -f "$GPG_DIR/gpg-agent.conf" ]]; then
+            printf 'default-cache-ttl 86400\nmax-cache-ttl 86400\n' > "$GPG_DIR/gpg-agent.conf"
+            chown "$USERNAME:$USERNAME" "$GPG_DIR/gpg-agent.conf"
+        fi
     fi
 fi
 

@@ -36,8 +36,10 @@ ssh_hosts() {
 }
 
 usb_disks() {
-    # (label) mount fstype size for currently-mounted removable/btrfs media.
-    findmnt -rn -o TARGET,FSTYPE,SIZE | awk '$1 ~ /^\/run\/media\// || $2=="btrfs"' \
+    # (target) mount fstype size for removable media, mounted by udiskie under
+    # /run/media (older paths under /media). Do NOT match every btrfs mount:
+    # that lists the system's own /, /home, /var/log, ... as "USB" targets.
+    findmnt -rn -o TARGET,FSTYPE,SIZE | awk '$1 ~ /^\/run\/media\// || $1 ~ /^\/media\//' \
         | sort -u
 }
 
@@ -153,6 +155,7 @@ info "Mounting btrfs pool at top level"
 mkdir -p "$POOL"
 SRC="$(findmnt -no SOURCE /)"
 UUID="$(blkid -s UUID -o value "$SRC")"
+[[ -n "$UUID" ]] || { gum style --foreground 1 "could not read filesystem UUID for $SRC"; exit 1; }
 grep -q "$POOL" /etc/fstab 2>/dev/null || \
     printf 'UUID=%s  %s  btrfs  rw,subvolid=5,compress=zstd  0 0\n' "$UUID" "$POOL" >> /etc/fstab
 
@@ -249,7 +252,11 @@ chmod 755 "$RUNNER"
 
 info "Fast SSH timeouts so off-network hourly runs fail fast"
 mkdir -p /root/.ssh
-printf 'Host *\n  ConnectTimeout 4\n' > /root/.ssh/config
+# Append rather than overwrite: the file may already hold real config.
+if ! grep -q '^[[:space:]]*ConnectTimeout' /root/.ssh/config 2>/dev/null; then
+    [[ -s /root/.ssh/config ]] && printf '\n' >> /root/.ssh/config
+    printf 'Host *\n  ConnectTimeout 4\n' >> /root/.ssh/config
+fi
 chmod 600 /root/.ssh/config
 
 info "Enabling hourly timer"

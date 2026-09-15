@@ -18,7 +18,7 @@ for p in "${profiles[@]}"; do
     fi
 done
 
-pick=$(printf '%s\n' "${opts[@]}" | tofi --prompt "power > ")
+pick=$(printf '%s\n' "${opts[@]}" | tofi --prompt-text "power > ")
 [[ -z "$pick" ]] && exit 0
 
 # Strip everything up to the last space (marker: "● " or "  ").

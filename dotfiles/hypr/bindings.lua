@@ -14,9 +14,13 @@ hl.bind(mainMod .. " + F", hl.dsp.exec_cmd(FileManager))
 -- All TUI helper terminals get the "TUI" app-id tag (float+center comes
 -- from the windowrule in looknfeel.lua). Terminals opened by hand keep the
 -- default foot app-id, so the rule never touches them.
-local function launch_tui(app)
+local function launch_tui(app, size)
   return function()
-    hl.dispatch(hl.dsp.exec_cmd(termlunch .. "--app-id TUI " .. app))
+    hl.dispatch(hl.dsp.exec_cmd(termlunch .. "--app-id TUI " .. app, {
+      float = true,
+      center = true,
+      size = size or { 800, 600 }
+    }))
   end
 end
 

@@ -12,7 +12,7 @@ pick=$(printf '%s\n' \
     "remove package" \
     "update system" \
     "system" \
-    | tofi --prompt "system > ")
+    | tofi --prompt-text "system > ")
 
 case "$pick" in
     passmenu-tofi)  exec passmenu-tofi ;;

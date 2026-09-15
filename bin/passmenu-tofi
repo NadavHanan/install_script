@@ -11,7 +11,7 @@ mapfile -t entries < <(find "$STORE" -name '*.gpg' \
 
 ((${#entries[@]})) || exit 0
 
-picked=$(printf '%s\n' "${entries[@]}" | tofi --prompt "pass > ")
+picked=$(printf '%s\n' "${entries[@]}" | tofi --prompt-text "pass > ")
 [[ -z "$picked" ]] && exit 0
 
 # ponytail: copied secrets stay in cliphist's history until it ages out;

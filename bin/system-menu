@@ -6,7 +6,7 @@ pick=$(printf '%s\n' \
     "lock" \
     "reboot" \
     "poweroff" \
-    | tofi --prompt "system > ")
+    | tofi --prompt-text "system > ")
 
 case "$pick" in
     lock)     exec hyprlock ;;

@@ -18,7 +18,14 @@ if [[ -n "${BASH_SOURCE[0]:-}" && "${BASH_SOURCE[0]}" != "bash" ]]; then
 else
     REPO_URL="${INSTALL_REPO:-https://github.com/NadavHanan/install_script.git}"
     REPO_ROOT="/tmp/my-arch"
-    [[ -d "$REPO_ROOT" ]] || git clone --depth 1 "$REPO_URL" "$REPO_ROOT"
+    # Refresh an existing clone instead of running stale code; re-clone when
+    # the fast-forward pull can't apply.
+    if [[ -d "$REPO_ROOT/.git" ]]; then
+        git -C "$REPO_ROOT" pull --ff-only --depth 1 --quiet 2>/dev/null \
+            || { rm -rf "$REPO_ROOT"; git clone --depth 1 "$REPO_URL" "$REPO_ROOT"; }
+    else
+        git clone --depth 1 "$REPO_URL" "$REPO_ROOT"
+    fi
 fi
 
 TMP_DIR="$(mktemp -d)"
@@ -183,6 +190,10 @@ readarray -t BOOT_GEO < <(jq -r '
     | [(.start | tob), (.size | tob)] | .[]' \
     "$REPO_ROOT/archinstall/config.json")
 ROOT_START=$(( ${BOOT_GEO[0]:-0} + ${BOOT_GEO[1]:-0} ))
+(( ROOT_START > 0 )) || {
+    step_fail "could not read boot partition geometry from archinstall/config.json"
+    exit 1
+}
 GPT_RESERVE=1048576      # 1 MiB backup GPT header
 DISK_SIZE=$(lsblk -bdno SIZE "$DISK") || { step_fail "could not stat $DISK"; exit 1; }
 ROOT_SIZE=$((DISK_SIZE - ROOT_START - GPT_RESERVE))
@@ -202,9 +213,15 @@ jq \
 # LUKS on by default: encrypt the root partition (obj_id from
 # archinstall/config.json). Password flows via creds; defaults to the user
 # password unless changed in the UI.
-jq '.disk_config.disk_encryption={
+LUKS_OBJ=$(jq -r '.disk_config.device_modifications[0].partitions[1].obj_id' \
+    "$REPO_ROOT/archinstall/config.json")
+[[ -n "$LUKS_OBJ" && "$LUKS_OBJ" != "null" ]] || {
+    step_fail "could not read root partition obj_id from archinstall/config.json"
+    exit 1
+}
+jq --arg obj "$LUKS_OBJ" '.disk_config.disk_encryption={
         encryption_type:"luks",
-        partitions:["670f10e9-70ef-403d-b253-cf228d8740d0"],
+        partitions:[$obj],
         iter_time:2000
     }' "$ARCH_CFG" > "$ARCH_CFG.tmp" && mv "$ARCH_CFG.tmp" "$ARCH_CFG"
 

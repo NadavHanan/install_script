@@ -80,10 +80,16 @@ if has_fingerprint_sensor; then
         if grep -q "pam_fprintd.so" "$pamfile"; then
             continue
         fi
-        if grep -q "^auth.*pam_unix.so" "$pamfile"; then
-            sed -i '0,/^auth.*pam_unix.so/s//auth        sufficient    pam_fprintd.so\n&/' "$pamfile"
+        # Insert before the module that prompts for the password. Arch's
+        # sudo/hyprlock use "auth include system-auth|login" instead of a
+        # literal pam_unix.so, so anchor on both; prerequisites already ahead
+        # (pam_nologin, ...) stay ahead. Fall back to the first auth line.
+        if grep -qE '^auth[[:space:]].*(pam_unix\.so|include)' "$pamfile"; then
+            sed -i '0,/^auth[[:space:]].*\(pam_unix\.so\|include\)/s//auth        sufficient    pam_fprintd.so\n&/' "$pamfile"
+        elif grep -qE '^auth' "$pamfile"; then
+            sed -i '0,/^auth/s//auth        sufficient    pam_fprintd.so\n&/' "$pamfile"
         else
-            printf '\nauth        sufficient    pam_fprintd.so\n' >> "$pamfile"
+            printf 'auth        sufficient    pam_fprintd.so\n' >> "$pamfile"
         fi
     done
 

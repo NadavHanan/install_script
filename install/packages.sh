@@ -62,7 +62,7 @@ PKGS=(
     pass pass-otp fprintd
 
     # nice-to-haves
-    tmux btop fastfetch eza ripgrep fd bat typst uv
+    tmux btop fastfetch eza ripgrep fd bat typst uv jq libqalculate
 
     # firmware
     fwupd
@@ -91,9 +91,13 @@ AUR_PKGS=(
     tofi
     ttf-ms-fonts
 )
-if command -v yay >/dev/null; then
-    sudo -u "$USERNAME" yay -S --needed --noconfirm "${AUR_PKGS[@]}"
+# tofi is the menu and zen-browser the browser: without these the desktop is
+# unusable, so a missing yay is a hard failure, not a silent skip.
+if ! command -v yay >/dev/null; then
+    step_fail "yay unavailable — AUR packages (${AUR_PKGS[*]}) not installed"
+    exit 1
 fi
+sudo -u "$USERNAME" yay -S --needed --noconfirm "${AUR_PKGS[@]}"
 
 # Run xdg-user-dirs to populate ~/ standard dirs.
 sudo -u "$USERNAME" xdg-user-dirs-update || true

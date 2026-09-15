@@ -7,7 +7,7 @@ command -v cliphist >/dev/null 2>&1 || exit 0
 history=$(cliphist list 2>/dev/null) || exit 0
 [[ -n "$history" ]] || exit 0
 
-picked=$(printf '%s\n' "$history" | tofi --prompt "clip > ")
+picked=$(printf '%s\n' "$history" | tofi --prompt-text "clip > ")
 [[ -z "$picked" ]] && exit 0
 
 # Drop it from history so copies don't accumulate duplicates.

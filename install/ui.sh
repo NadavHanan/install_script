@@ -54,7 +54,7 @@ substage() {
 }
 
 step_fail() {
-    gum style --foreground 1 "    fail (log: $UI_LOG)"
+    gum style --foreground 1 "    fail${1:+: $*} (log: $UI_LOG)"
 }
 
 run() {
