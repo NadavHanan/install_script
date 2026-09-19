@@ -91,12 +91,9 @@
                         "mountpoint": null,
                         "obj_id": "670f10e9-70ef-403d-b253-cf228d8740d0",
                         "size": {
-                            "sector_size": {
-                                "unit": "B",
-                                "value": 512
-                            },
-                            "unit": "B",
-                            "value": 31136415744
+                            "sector_size": null,
+                            "unit": "Percent",
+                            "value": 100
                         },
                         "start": {
                             "sector_size": {
@@ -112,7 +109,12 @@
                 ],
                 "wipe": true
             }
-        ]
+        ],
+        "disk_encryption": {
+            "encryption_type": "luks",
+            "partitions": ["670f10e9-70ef-403d-b253-cf228d8740d0"],
+            "iter_time": 2000
+        }
     },
     "hostname": "arch",
     "kernels": [
