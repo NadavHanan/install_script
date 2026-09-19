@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 case $1 in
   up)   brightnessctl -e set 5%+ ;;

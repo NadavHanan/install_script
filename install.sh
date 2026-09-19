@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Arch installer. Run from a git clone on the Arch ISO: ./install.sh
-set -e
+set -euo pipefail
 # Repo root = dir the script lives in (BASH_SOURCE, not $0, works when sourced/piped).
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

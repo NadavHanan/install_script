@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 SINK="@DEFAULT_AUDIO_SINK@"
 case $1 in
