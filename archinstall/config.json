@@ -82,26 +82,29 @@
                                 "name": "@pkg"
                             }
                         ],
-                        "dev_path": null,
                         "flags": [],
                         "fs_type": "btrfs",
+                        "length": {
+                            "sector_size": null,
+                            "total_size": {
+                                "sector_size": null,
+                                "total_size": null,
+                                "unit": "B",
+                                "value": 500107862016
+                            },
+                            "unit": "Percent",
+                            "value": 100
+                        },
                         "mount_options": [
                             "compress=zstd"
                         ],
                         "mountpoint": null,
                         "obj_id": "670f10e9-70ef-403d-b253-cf228d8740d0",
-                        "size": {
-                            "sector_size": null,
-                            "unit": "Percent",
-                            "value": 100
-                        },
                         "start": {
-                            "sector_size": {
-                                "unit": "B",
-                                "value": 512
-                            },
-                            "unit": "B",
-                            "value": 1074790400
+                            "sector_size": null,
+                            "total_size": null,
+                            "unit": "MiB",
+                            "value": 513
                         },
                         "status": "create",
                         "type": "primary"
