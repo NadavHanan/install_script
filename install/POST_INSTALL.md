@@ -61,9 +61,12 @@ NetworkManager. Here's the lay of the land.
   `gpg --list-secret-keys`).
 - Unlock sudo / greetd / hyprlock: fingerprint via `fprintd` (if a
   supported sensor is present at install time), or type the password.
-  Fingerprint unlock does **not** auto-unlock GNOME Keyring or similar
-  secret stores — that's a separate `pam_gnome_keyring.so` only triggered
-  by password auth.
+  Fingerprint unlock does **not** auto-unlock GNOME Keyring —
+  `pam_gnome_keyring.so` only fires on password auth, so keyring unlock
+  waits for the next password login.
+- GNOME Keyring is set up for auto-unlock at login (`pam_gnome_keyring.so`
+  in `/etc/pam.d/greetd`). The keyring is created on first use; set its
+  password to your login password, or it won't auto-unlock.
 
 ## Backups (btrbk)
 

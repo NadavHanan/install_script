@@ -14,8 +14,7 @@ mapfile -t entries < <(find "$STORE" -name '*.gpg' \
 picked=$(printf '%s\n' "${entries[@]}" | tofi --prompt-text "pass > ")
 [[ -z "$picked" ]] && exit 0
 
-# ponytail: copied secrets stay in cliphist's history until it ages out;
-# proper fix is filtering in the cliphist-store watcher.
+#TODO copied secrets stay in cliphist's history until it ages out; proper fix is filtering in the cliphist-store watcher.
 copy_secret() {  # copy to both selections, wipe them after 45s (pass convention)
     printf '%s' "$1" | wl-copy
     printf '%s' "$1" | wl-copy --primary

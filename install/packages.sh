@@ -60,6 +60,7 @@ PKGS=(
 
     # passwords
     pass pass-otp fprintd
+    gnome-keyring
 
     # nice-to-haves
     tmux btop fastfetch eza ripgrep fd bat typst uv jq libqalculate

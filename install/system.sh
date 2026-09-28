@@ -93,12 +93,21 @@ if has_fingerprint_sensor; then
         fi
     done
 
-    # Note: fingerprint unlock does NOT auto-unlock GNOME Keyring / secret
-    # stores. pam_gnome_keyring.so is the separate piece for that, and it
-    # only fires on password auth. We don't add it here because there's no
-    # GNOME Keyring setup yet.
+    # Note: fingerprint unlock does NOT auto-unlock GNOME Keyring (see the
+    # gnome-keyring PAM block below) — pam_gnome_keyring only fires on
+    # password auth.
 else
     gum style --faint "    no fingerprint sensor detected — fprintd left disabled"
+fi
+
+# ---- gnome-keyring: unlock with the login password at greetd -------------
+# Apps using libsecret (browsers, etc.) get secrets without extra prompts.
+# The keyring is created on first use; for auto-unlock its password must
+# equal the login password. Fingerprint logins leave it locked.
+step "Configuring gnome-keyring PAM unlock (greetd)"
+if [[ -f /etc/pam.d/greetd ]] && ! grep -q pam_gnome_keyring /etc/pam.d/greetd; then
+    sed -i '0,/^auth/s//auth        optional    pam_gnome_keyring.so\n&/' /etc/pam.d/greetd
+    printf 'session    optional    pam_gnome_keyring.so start\n' >> /etc/pam.d/greetd
 fi
 
 # udiskie automounts removable media and ships NO systemd unit (the service
